@@ -1,3 +1,4 @@
+include setup.cfg
 include README
 include xattr.html
 include xattr.txt
