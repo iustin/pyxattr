@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <attr/xattr.h>
 
+/** Converts from a string, file or int argument to what we need. */
 static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **filename) {
     if(PyString_Check(myobj)) {
         *ishandle = 0;
@@ -22,13 +23,13 @@ static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **fi
     return 1;
 }
 
+/* Wrapper for getxattr */
 static PyObject *
 pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     char *file;
-    int filedes;
-    int ishandle;
+    int filedes, ishandle;
     char *attrname;
     char *buf;
     int nalloc, nret;
@@ -37,7 +38,6 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Os", &myarg, &attrname))
         return NULL;
-
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
 
@@ -73,6 +73,7 @@ pygetxattr(PyObject *self, PyObject *args)
     return res;
 }
 
+/* Wrapper for setxattr */
 static PyObject *
 pysetxattr(PyObject *self, PyObject *args)
 {
@@ -108,6 +109,7 @@ pysetxattr(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+/* Wrapper for removexattr */
 static PyObject *
 pyremovexattr(PyObject *self, PyObject *args)
 {
@@ -137,6 +139,7 @@ pyremovexattr(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+/* Wrapper for listxattr */
 static PyObject *
 pylistxattr(PyObject *self, PyObject *args)
 {
@@ -153,7 +156,6 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "O", &myarg))
         return NULL;
-    
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
 
@@ -216,5 +218,5 @@ static PyMethodDef AclMethods[] = {
 void
 initaclmodule(void)
 {
-    (void) Py_InitModule("aclmodule", AclMethods);
+    (void) Py_InitModule3("aclmodule", AclMethods, "Wrapper module for libattr");
 }
