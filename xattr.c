@@ -24,7 +24,11 @@ static char __pygetxattr_doc__[] = \
 "\t      or a file descriptor; this represents the file on \n" \
 "\t      which to act\n" \
 "\t- a string, representing the attribute whose value to retrieve;\n" \
-"\t      usually in form of system.posix_acl or user.mime_type" \
+"\t      usually in form of system.posix_acl or user.mime_type\n" \
+"\t- (optional) a boolean value (defaults to false), which, if\n" \
+"\t      the file name given is a symbolic link, makes the\n" \
+"\t      function operate on the symbolic link itself instead\n" \
+"\t      of its target;" \
 ;
 
 static PyObject *
@@ -32,14 +36,14 @@ pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     char *file;
-    int filedes, ishandle;
+    int filedes, ishandle, dolink=0;
     char *attrname;
     char *buf;
     int nalloc, nret;
     PyObject *res;
     
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os", &myarg, &attrname))
+    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
@@ -47,6 +51,8 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Find out the needed size of the buffer */
     nalloc = ishandle ? 
         fgetxattr(filedes, attrname, NULL, 0) : 
+        dolink ?
+        lgetxattr(file, attrname, NULL, 0) :    
         getxattr(file, attrname, NULL, 0);
     if(nalloc == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
@@ -78,6 +84,10 @@ pygetxattr(PyObject *self, PyObject *args)
 
 static char __pysetxattr_doc__[] = \
 "Set the value of a given extended attribute.\n" \
+"Be carefull in case you want to set attributes on symbolic\n" \
+"links, you have to use all the 5 parameters; use 0 for the \n" \
+"flags value if you want the default behavior (create or " \
+"replace)\n" \
 "\n" \
 "Parameters:\n" \
 "\t- a string representing filename, or a file-like object,\n" \
@@ -88,11 +98,15 @@ static char __pysetxattr_doc__[] = \
 "\t- a string, possibly with embedded NULLs; note that there\n" \
 "\t      are restrictions regarding the size of the value, for\n" \
 "\t      example, for ext2/ext3, maximum size is the block size\n" \
-"\t- a small integer; if ommited the attribute will be created\n" \
-"\t      or replaced; if XATTR_CREATE, the attribute will be \n" \
-"\t      created, giving an error if it already exists; if \n" \
-"\t      XATTR_REPLACE, the attribute will be replaced, giving \n" \
-"\t      an error if it doesn't exists." \
+"\t- (optional) flags; if 0 or ommited the attribute will be \n" \
+"\t      created or replaced; if XATTR_CREATE, the attribute \n" \
+"\t      will be created, giving an error if it already exists;\n" \
+"\t      of XATTR_REPLACE, the attribute will be replaced,\n" \
+"\t      giving an error if it doesn't exists;\n" \
+"\t- (optional) a boolean value (defaults to false), which, if\n" \
+"\t      the file name given is a symbolic link, makes the\n" \
+"\t      function operate on the symbolic link itself instead\n" \
+"\t      of its target;" \
 ;
 
 /* Wrapper for setxattr */
@@ -101,14 +115,14 @@ pysetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     char *file;
-    int ishandle, filedes;
+    int ishandle, filedes, dolink=0;
     char *attrname;
     char *buf;
     int bufsize, nret;
     int flags = 0;
     
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Oss#|b", &myarg, &attrname, &buf, &bufsize, &flags))
+    if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname, &buf, &bufsize, &flags, &dolink))
         return NULL;
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
@@ -116,6 +130,8 @@ pysetxattr(PyObject *self, PyObject *args)
     /* Set the attribute's value */
     nret = ishandle ?
         fsetxattr(filedes, attrname, buf, bufsize, flags) :
+        dolink ?
+        lsetxattr(file, attrname, buf, bufsize, flags) :
         setxattr(file, attrname, buf, bufsize, flags);
 
     if(nret == -1) {
@@ -135,7 +151,11 @@ static char __pyremovexattr_doc__[] = \
 "\t      or a file descriptor; this represents the file on \n" \
 "\t      which to act\n" \
 "\t- a string, representing the attribute to be removed;\n" \
-"\t      usually in form of system.posix_acl or user.mime_type" \
+"\t      usually in form of system.posix_acl or user.mime_type\n" \
+"\t- (optional) a boolean value (defaults to false), which, if\n" \
+"\t      the file name given is a symbolic link, makes the\n" \
+"\t      function operate on the symbolic link itself instead\n" \
+"\t      of its target;" \
 ;
 
 /* Wrapper for removexattr */
@@ -144,12 +164,12 @@ pyremovexattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     char *file;
-    int ishandle, filedes;
+    int ishandle, filedes, dolink=0;
     char *attrname;
     int nret;
     
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os", &myarg, &attrname))
+    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
 
     if(!convertObj(myarg, &ishandle, &filedes, &file))
@@ -158,6 +178,8 @@ pyremovexattr(PyObject *self, PyObject *args)
     /* Remove the attribute */
     nret = ishandle ?
         fremovexattr(filedes, attrname) :
+        dolink ?
+        lremovexattr(file, attrname) :
         removexattr(file, attrname);
 
     if(nret == -1)
@@ -175,6 +197,10 @@ static char __pylistxattr_doc__[] = \
 "\t- a string representing filename, or a file-like object,\n" \
 "\t      or a file descriptor; this represents the file to \n" \
 "\t      be queried\n" \
+"\t- (optional) a boolean value (defaults to false), which, if\n" \
+"\t      the file name given is a symbolic link, makes the\n" \
+"\t      function operate on the symbolic link itself instead\n" \
+"\t      of its target;" \
 ;
 
 /* Wrapper for listxattr */
@@ -184,7 +210,7 @@ pylistxattr(PyObject *self, PyObject *args)
     char *file = NULL;
     int filedes = -1;
     char *buf;
-    int ishandle;
+    int ishandle, dolink=0;
     int nalloc, nret;
     PyObject *myarg;
     PyObject *mytuple;
@@ -192,7 +218,7 @@ pylistxattr(PyObject *self, PyObject *args)
     char *s;
     
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "O", &myarg))
+    if (!PyArg_ParseTuple(args, "O|i", &myarg, &dolink))
         return NULL;
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
@@ -215,7 +241,10 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Now retrieve the list of attributes */
     nret = ishandle ? 
         flistxattr(filedes, buf, nalloc) : 
+        dolink ?
+        llistxattr(file, buf, nalloc) :
         listxattr(file, buf, nalloc);
+
     if(nret == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
     }
@@ -255,6 +284,9 @@ static char __xattr_doc__[] = \
 "This module gives access to the extended attributes present\n" \
 "in some operating systems/filesystems. You can list attributes,\n"\
 "get, set and remove them.\n"\
+"The last and optional parameter for all functions is a boolean \n"\
+"value which enables the 'l-' version of the functions - acting\n"\
+"on symbolic links and not their destination.\n"\
 "\n" \
 "Example: \n" \
 ">>> import xattr\n" \
