@@ -3,7 +3,7 @@
 import distutils
 from distutils.core import setup, Extension
 
-setup(name="pyacl",
+setup(name="pyxattr",
       version="0.1",
-      ext_modules=[Extension("attrmodule", ["attr.c"], libraries=["attr"])],
+      ext_modules=[Extension("xattr", ["xattr.c"], libraries=["attr"])],
       )
