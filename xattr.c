@@ -6,16 +6,8 @@ static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **fi
     if(PyString_Check(myobj)) {
         *ishandle = 0;
         *filename = PyString_AS_STRING(myobj);
-    } else if(PyInt_Check(myobj)) {
+    } else if((*filehandle = PyObject_AsFileDescriptor(myobj)) != -1) {
         *ishandle = 1;
-        *filehandle = PyInt_AS_LONG(myobj);
-    } else if(PyFile_Check(myobj)) {
-        *ishandle = 1;
-        *filehandle = fileno(PyFile_AsFile(myobj));
-        if(*filehandle == -1) {
-            PyErr_SetFromErrno(PyExc_IOError);
-            return 0;
-        }
     } else {
         PyErr_SetString(PyExc_TypeError, "argument 1 must be string or int");
         return 0;
@@ -203,7 +195,7 @@ pylistxattr(PyObject *self, PyObject *args)
     return mytuple;
 }
 
-static PyMethodDef AclMethods[] = {
+static PyMethodDef xattr_methods[] = {
     {"getxattr",  pygetxattr, METH_VARARGS,
      "Get the value of a given extended attribute."},
     {"setxattr",  pysetxattr, METH_VARARGS,
@@ -216,7 +208,7 @@ static PyMethodDef AclMethods[] = {
 };
 
 void
-initaclmodule(void)
+initxattr(void)
 {
-    (void) Py_InitModule3("aclmodule", AclMethods, "Wrapper module for libattr");
+    (void) Py_InitModule3("xattr", xattr_methods, "Wrapper module for libattr");
 }
