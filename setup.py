@@ -11,5 +11,7 @@ setup(name="pyxattr",
       of the attr C library - see attr(5).""",
       author="Iustin Pop",
       author_email="iusty@k1024.org",
+      url="http://pyxattr.sourceforge.net",
+      license="GPL",
       ext_modules=[Extension("xattr", ["xattr.c"], libraries=["attr"])],
       )
