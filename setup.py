@@ -6,7 +6,7 @@ from distutils.core import setup, Extension
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.1"
+version = "0.2"
 
 setup(name="pyxattr",
       version=version,
