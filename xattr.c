@@ -16,6 +16,17 @@ static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **fi
 }
 
 /* Wrapper for getxattr */
+static char __pygetxattr_doc__[] = \
+"Get the value of a given extended attribute.\n" \
+"\n" \
+"Parameters:\n" \
+"\t- a string representing filename, or a file-like object,\n" \
+"\t      or a file descriptor; this represents the file on \n" \
+"\t      which to act\n" \
+"\t- a string, representing the attribute whose value to retrieve;\n" \
+"\t      usually in form of system.posix_acl or user.mime_type" \
+;
+
 static PyObject *
 pygetxattr(PyObject *self, PyObject *args)
 {
@@ -65,6 +76,25 @@ pygetxattr(PyObject *self, PyObject *args)
     return res;
 }
 
+static char __pysetxattr_doc__[] = \
+"Set the value of a given extended attribute.\n" \
+"\n" \
+"Parameters:\n" \
+"\t- a string representing filename, or a file-like object,\n" \
+"\t      or a file descriptor; this represents the file on \n" \
+"\t      which to act\n" \
+"\t- a string, representing the attribute whose value to set;\n" \
+"\t      usually in form of system.posix_acl or user.mime_type\n" \
+"\t- a string, possibly with embedded NULLs; note that there\n" \
+"\t      are restrictions regarding the size of the value, for\n" \
+"\t      example, for ext2/ext3, maximum size is the block size\n" \
+"\t- a small integer; if ommited the attribute will be created\n" \
+"\t      or replaced; if XATTR_CREATE, the attribute will be \n" \
+"\t      created, giving an error if it already exists; if \n" \
+"\t      XATTR_REPLACE, the attribute will be replaced, giving \n" \
+"\t      an error if it doesn't exists." \
+;
+
 /* Wrapper for setxattr */
 static PyObject *
 pysetxattr(PyObject *self, PyObject *args)
@@ -74,18 +104,14 @@ pysetxattr(PyObject *self, PyObject *args)
     int ishandle, filedes;
     char *attrname;
     char *buf;
-    char mode = 0;
     int bufsize, nret;
-    int flags;
+    int flags = 0;
     
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Oss#|b", &myarg, &attrname, &buf, &bufsize, &mode))
+    if (!PyArg_ParseTuple(args, "Oss#|b", &myarg, &attrname, &buf, &bufsize, &flags))
         return NULL;
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
-
-    /* Check the flags and convert them to libattr values */
-    flags = mode == 1 ? XATTR_CREATE : mode == 2 ? XATTR_REPLACE : 0;
 
     /* Set the attribute's value */
     nret = ishandle ?
@@ -100,6 +126,17 @@ pysetxattr(PyObject *self, PyObject *args)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+static char __pyremovexattr_doc__[] = \
+"Remove an attribute from a file\n" \
+"\n" \
+"Parameters:\n" \
+"\t- a string representing filename, or a file-like object,\n" \
+"\t      or a file descriptor; this represents the file on \n" \
+"\t      which to act\n" \
+"\t- a string, representing the attribute to be removed;\n" \
+"\t      usually in form of system.posix_acl or user.mime_type" \
+;
 
 /* Wrapper for removexattr */
 static PyObject *
@@ -130,6 +167,15 @@ pyremovexattr(PyObject *self, PyObject *args)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+static char __pylistxattr_doc__[] = \
+"Return the list of attribute names from a file\n" \
+"\n" \
+"Parameters:\n" \
+"\t- a string representing filename, or a file-like object,\n" \
+"\t      or a file descriptor; this represents the file to \n" \
+"\t      be queried\n" \
+;
 
 /* Wrapper for listxattr */
 static PyObject *
@@ -196,19 +242,27 @@ pylistxattr(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef xattr_methods[] = {
-    {"getxattr",  pygetxattr, METH_VARARGS,
-     "Get the value of a given extended attribute."},
-    {"setxattr",  pysetxattr, METH_VARARGS,
-     "Set the value of a given extended attribute."},
-    {"removexattr",  pyremovexattr, METH_VARARGS,
-     "Remove the a given extended attribute."},
-    {"listxattr",  pylistxattr, METH_VARARGS,
-     "Retrieve the list of extened attributes."},
+    {"getxattr",  pygetxattr, METH_VARARGS, __pygetxattr_doc__ },
+    {"setxattr",  pysetxattr, METH_VARARGS, __pysetxattr_doc__ },
+    {"removexattr",  pyremovexattr, METH_VARARGS, __pyremovexattr_doc__ },
+    {"listxattr",  pylistxattr, METH_VARARGS, __pylistxattr_doc__ },
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
+
+static char __xattr_doc__[] = \
+"Access extended filesystem attributes\n" \
+"\n" \
+"This module gives access to the extended attributes present\n" \
+"in some operating systems/filesystems. You can list attributes,\n"\
+"get, set and remove them.\n"\
+;
 
 void
 initxattr(void)
 {
-    (void) Py_InitModule3("xattr", xattr_methods, "Wrapper module for libattr");
+    PyObject *m = Py_InitModule3("xattr", xattr_methods, __xattr_doc__);
+    
+    PyModule_AddIntConstant(m, "XATTR_CREATE", XATTR_CREATE);
+    PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
+
 }
