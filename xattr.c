@@ -169,7 +169,7 @@ pyremovexattr(PyObject *self, PyObject *args)
 }
 
 static char __pylistxattr_doc__[] = \
-"Return the list of attribute names from a file\n" \
+"Return the tuple of attribute names from a file\n" \
 "\n" \
 "Parameters:\n" \
 "\t- a string representing filename, or a file-like object,\n" \
@@ -255,6 +255,18 @@ static char __xattr_doc__[] = \
 "This module gives access to the extended attributes present\n" \
 "in some operating systems/filesystems. You can list attributes,\n"\
 "get, set and remove them.\n"\
+"\n" \
+"Example: \n" \
+">>> import xattr\n" \
+">>> xattr.listxattr(\"file.txt\")\n" \
+"('user.mime_type',)\n" \
+">>> xattr.getxattr(\"file.txt\", \"user.mime_type\")\n" \
+"'text/plain'\n" \
+">>> xattr.setxattr(\"file.txt\", \"user.comment\", \"Simple text file\")\n"\
+">>> xattr.listxattr(\"file.txt\")\n" \
+"('user.mime_type', 'user.comment')\n" \
+">>> xattr.removexattr (\"file.txt\", \"user.comment\")\n" \
+"" \
 ;
 
 void
