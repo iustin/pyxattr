@@ -3,3 +3,4 @@ include README
 include xattr.html
 include xattr.txt
 include xattr.c
+include MANIFEST
