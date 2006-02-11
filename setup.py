@@ -6,7 +6,7 @@ from distutils.core import setup, Extension
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.2"
+version = "0.2.1"
 
 setup(name="pyxattr",
       version=version,
@@ -18,5 +18,5 @@ setup(name="pyxattr",
       license="GPL",
       ext_modules=[Extension("xattr", ["xattr.c"], libraries=["attr"])],
       data_files=[("/usr/share/doc/pyxattr-%s" % version,
-                  ["README", "xattr.html", "xattr.txt"])]
+                  ["README", "NEWS", "xattr.html", "xattr.txt"])]
       )

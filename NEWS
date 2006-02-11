@@ -1,0 +1,7 @@
+News in 0.2.1
+-------------
+
+ * fixed a bug when reading symlink EAs (you weren't able to
+   do it, actually)
+ * fix a possible memory leak when the actual read of the EA
+   failed but the call to get the length of the EA didn't

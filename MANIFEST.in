@@ -5,3 +5,4 @@ include xattr.txt
 include xattr.c
 include MANIFEST
 include ChangeLog
+include NEWS

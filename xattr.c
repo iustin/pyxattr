@@ -35,8 +35,8 @@ static PyObject *
 pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    char *file;
-    int filedes, ishandle, dolink=0;
+    char *file = NULL;
+    int filedes = -1, ishandle, dolink=0;
     char *attrname;
     char *buf;
     int nalloc, nret;
@@ -50,9 +50,9 @@ pygetxattr(PyObject *self, PyObject *args)
 
     /* Find out the needed size of the buffer */
     nalloc = ishandle ? 
-        fgetxattr(filedes, attrname, NULL, 0) : 
+        fgetxattr(filedes, attrname, NULL, 0) :
         dolink ?
-        lgetxattr(file, attrname, NULL, 0) :    
+        lgetxattr(file, attrname, NULL, 0) :
         getxattr(file, attrname, NULL, 0);
     if(nalloc == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
@@ -67,8 +67,11 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Now retrieve the attribute value */
     nret = ishandle ? 
         fgetxattr(filedes, attrname, buf, nalloc) :
+        dolink ?
+        lgetxattr(file, attrname, buf, nalloc) :
         getxattr(file, attrname, buf, nalloc);
     if(nret == -1) {
+        PyMem_Free(buf);
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
