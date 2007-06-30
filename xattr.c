@@ -41,7 +41,7 @@ pygetxattr(PyObject *self, PyObject *args)
     char *buf;
     int nalloc, nret;
     PyObject *res;
-    
+
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
@@ -49,7 +49,7 @@ pygetxattr(PyObject *self, PyObject *args)
         return NULL;
 
     /* Find out the needed size of the buffer */
-    nalloc = ishandle ? 
+    nalloc = ishandle ?
         fgetxattr(filedes, attrname, NULL, 0) :
         dolink ?
         lgetxattr(file, attrname, NULL, 0) :
@@ -65,7 +65,7 @@ pygetxattr(PyObject *self, PyObject *args)
     }
 
     /* Now retrieve the attribute value */
-    nret = ishandle ? 
+    nret = ishandle ?
         fgetxattr(filedes, attrname, buf, nalloc) :
         dolink ?
         lgetxattr(file, attrname, buf, nalloc) :
@@ -123,7 +123,7 @@ pysetxattr(PyObject *self, PyObject *args)
     char *buf;
     int bufsize, nret;
     int flags = 0;
-    
+
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname, &buf, &bufsize, &flags, &dolink))
         return NULL;
@@ -170,7 +170,7 @@ pyremovexattr(PyObject *self, PyObject *args)
     int ishandle, filedes, dolink=0;
     char *attrname;
     int nret;
-    
+
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
@@ -219,7 +219,7 @@ pylistxattr(PyObject *self, PyObject *args)
     PyObject *mytuple;
     int nattrs;
     char *s;
-    
+
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "O|i", &myarg, &dolink))
         return NULL;
@@ -229,6 +229,8 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Find out the needed size of the buffer */
     nalloc = ishandle ?
         flistxattr(filedes, NULL, 0) :
+        dolink ?
+        llistxattr(file, NULL, 0) :
         listxattr(file, NULL, 0);
 
     if(nalloc == -1) {
@@ -242,8 +244,8 @@ pylistxattr(PyObject *self, PyObject *args)
     }
 
     /* Now retrieve the list of attributes */
-    nret = ishandle ? 
-        flistxattr(filedes, buf, nalloc) : 
+    nret = ishandle ?
+        flistxattr(filedes, buf, nalloc) :
         dolink ?
         llistxattr(file, buf, nalloc) :
         listxattr(file, buf, nalloc);
@@ -308,7 +310,7 @@ void
 initxattr(void)
 {
     PyObject *m = Py_InitModule3("xattr", xattr_methods, __xattr_doc__);
-    
+
     PyModule_AddIntConstant(m, "XATTR_CREATE", XATTR_CREATE);
     PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
 
