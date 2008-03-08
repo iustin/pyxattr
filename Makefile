@@ -1,9 +1,5 @@
 doc: xattr.txt xattr.html
 
-log:
-	rm -f ChangeLog
-	svn log -r HEAD:1 | ~/bin/gnuify-changelog.pl > ChangeLog
-
 build/lib.linux-i686-2.3/xattr.so: xattr.c
 	./setup.py build
 
