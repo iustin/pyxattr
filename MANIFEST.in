@@ -1,7 +1,5 @@
 include setup.cfg
 include README
-include xattr.html
-include xattr.txt
 include xattr.c
 include MANIFEST
 include NEWS

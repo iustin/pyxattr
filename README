@@ -1,7 +1,7 @@
 This is the pyxattr module, a Python extension module which gives
 access to the extended attributes available in some operating systems.
 
-For usage details, see xattr.txt or xattr.html.
+For usage details, see the documentation of the module using pydoc.
 The project web page is http://pyxattr.sourceforge.net
 
 Author: Iustin Pop, <iusty@k1024.org>
