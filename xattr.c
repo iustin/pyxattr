@@ -2,7 +2,8 @@
 #include <attr/xattr.h>
 
 /** Converts from a string, file or int argument to what we need. */
-static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **filename) {
+static int convertObj(PyObject *myobj, int *ishandle, int *filehandle,
+                      char **filename) {
     if(PyString_Check(myobj)) {
         *ishandle = 0;
         *filename = PyString_AS_STRING(myobj);
@@ -16,20 +17,20 @@ static int convertObj(PyObject *myobj, int *ishandle, int *filehandle, char **fi
 }
 
 /* Wrapper for getxattr */
-static char __pygetxattr_doc__[] = \
-"Get the value of a given extended attribute.\n" \
-"\n" \
-"Parameters:\n" \
-"\t- a string representing filename, or a file-like object,\n" \
-"\t      or a file descriptor; this represents the file on \n" \
-"\t      which to act\n" \
-"\t- a string, representing the attribute whose value to retrieve;\n" \
-"\t      usually in form of system.posix_acl or user.mime_type\n" \
-"\t- (optional) a boolean value (defaults to false), which, if\n" \
-"\t      the file name given is a symbolic link, makes the\n" \
-"\t      function operate on the symbolic link itself instead\n" \
-"\t      of its target;" \
-;
+static char __pygetxattr_doc__[] =
+    "Get the value of a given extended attribute.\n"
+    "\n"
+    "Parameters:\n"
+    "\t- a string representing filename, or a file-like object,\n"
+    "\t      or a file descriptor; this represents the file on \n"
+    "\t      which to act\n"
+    "\t- a string, representing the attribute whose value to retrieve;\n"
+    "\t      usually in form of system.posix_acl or user.mime_type\n"
+    "\t- (optional) a boolean value (defaults to false), which, if\n"
+    "\t      the file name given is a symbolic link, makes the\n"
+    "\t      function operate on the symbolic link itself instead\n"
+    "\t      of its target;"
+    ;
 
 static PyObject *
 pygetxattr(PyObject *self, PyObject *args)
@@ -85,32 +86,32 @@ pygetxattr(PyObject *self, PyObject *args)
     return res;
 }
 
-static char __pysetxattr_doc__[] = \
-"Set the value of a given extended attribute.\n" \
-"Be carefull in case you want to set attributes on symbolic\n" \
-"links, you have to use all the 5 parameters; use 0 for the \n" \
-"flags value if you want the default behavior (create or " \
-"replace)\n" \
-"\n" \
-"Parameters:\n" \
-"\t- a string representing filename, or a file-like object,\n" \
-"\t      or a file descriptor; this represents the file on \n" \
-"\t      which to act\n" \
-"\t- a string, representing the attribute whose value to set;\n" \
-"\t      usually in form of system.posix_acl or user.mime_type\n" \
-"\t- a string, possibly with embedded NULLs; note that there\n" \
-"\t      are restrictions regarding the size of the value, for\n" \
-"\t      example, for ext2/ext3, maximum size is the block size\n" \
-"\t- (optional) flags; if 0 or ommited the attribute will be \n" \
-"\t      created or replaced; if XATTR_CREATE, the attribute \n" \
-"\t      will be created, giving an error if it already exists;\n" \
-"\t      of XATTR_REPLACE, the attribute will be replaced,\n" \
-"\t      giving an error if it doesn't exists;\n" \
-"\t- (optional) a boolean value (defaults to false), which, if\n" \
-"\t      the file name given is a symbolic link, makes the\n" \
-"\t      function operate on the symbolic link itself instead\n" \
-"\t      of its target;" \
-;
+static char __pysetxattr_doc__[] =
+    "Set the value of a given extended attribute.\n"
+    "Be carefull in case you want to set attributes on symbolic\n"
+    "links, you have to use all the 5 parameters; use 0 for the \n"
+    "flags value if you want the default behavior (create or "
+    "replace)\n"
+    "\n"
+    "Parameters:\n"
+    "\t- a string representing filename, or a file-like object,\n"
+    "\t      or a file descriptor; this represents the file on \n"
+    "\t      which to act\n"
+    "\t- a string, representing the attribute whose value to set;\n"
+    "\t      usually in form of system.posix_acl or user.mime_type\n"
+    "\t- a string, possibly with embedded NULLs; note that there\n"
+    "\t      are restrictions regarding the size of the value, for\n"
+    "\t      example, for ext2/ext3, maximum size is the block size\n"
+    "\t- (optional) flags; if 0 or ommited the attribute will be \n"
+    "\t      created or replaced; if XATTR_CREATE, the attribute \n"
+    "\t      will be created, giving an error if it already exists;\n"
+    "\t      of XATTR_REPLACE, the attribute will be replaced,\n"
+    "\t      giving an error if it doesn't exists;\n"
+    "\t- (optional) a boolean value (defaults to false), which, if\n"
+    "\t      the file name given is a symbolic link, makes the\n"
+    "\t      function operate on the symbolic link itself instead\n"
+    "\t      of its target;"
+    ;
 
 /* Wrapper for setxattr */
 static PyObject *
@@ -125,7 +126,8 @@ pysetxattr(PyObject *self, PyObject *args)
     int flags = 0;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname, &buf, &bufsize, &flags, &dolink))
+    if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname,
+                          &buf, &bufsize, &flags, &dolink))
         return NULL;
     if(!convertObj(myarg, &ishandle, &filedes, &file))
         return NULL;
@@ -146,20 +148,20 @@ pysetxattr(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static char __pyremovexattr_doc__[] = \
-"Remove an attribute from a file\n" \
-"\n" \
-"Parameters:\n" \
-"\t- a string representing filename, or a file-like object,\n" \
-"\t      or a file descriptor; this represents the file on \n" \
-"\t      which to act\n" \
-"\t- a string, representing the attribute to be removed;\n" \
-"\t      usually in form of system.posix_acl or user.mime_type\n" \
-"\t- (optional) a boolean value (defaults to false), which, if\n" \
-"\t      the file name given is a symbolic link, makes the\n" \
-"\t      function operate on the symbolic link itself instead\n" \
-"\t      of its target;" \
-;
+static char __pyremovexattr_doc__[] =
+    "Remove an attribute from a file\n"
+    "\n"
+    "Parameters:\n"
+    "\t- a string representing filename, or a file-like object,\n"
+    "\t      or a file descriptor; this represents the file on \n"
+    "\t      which to act\n"
+    "\t- a string, representing the attribute to be removed;\n"
+    "\t      usually in form of system.posix_acl or user.mime_type\n"
+    "\t- (optional) a boolean value (defaults to false), which, if\n"
+    "\t      the file name given is a symbolic link, makes the\n"
+    "\t      function operate on the symbolic link itself instead\n"
+    "\t      of its target;"
+    ;
 
 /* Wrapper for removexattr */
 static PyObject *
@@ -193,18 +195,18 @@ pyremovexattr(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static char __pylistxattr_doc__[] = \
-"Return the tuple of attribute names from a file\n" \
-"\n" \
-"Parameters:\n" \
-"\t- a string representing filename, or a file-like object,\n" \
-"\t      or a file descriptor; this represents the file to \n" \
-"\t      be queried\n" \
-"\t- (optional) a boolean value (defaults to false), which, if\n" \
-"\t      the file name given is a symbolic link, makes the\n" \
-"\t      function operate on the symbolic link itself instead\n" \
-"\t      of its target;" \
-;
+static char __pylistxattr_doc__[] =
+    "Return the tuple of attribute names from a file\n"
+    "\n"
+    "Parameters:\n"
+    "\t- a string representing filename, or a file-like object,\n"
+    "\t      or a file descriptor; this represents the file to \n"
+    "\t      be queried\n"
+    "\t- (optional) a boolean value (defaults to false), which, if\n"
+    "\t      the file name given is a symbolic link, makes the\n"
+    "\t      function operate on the symbolic link itself instead\n"
+    "\t      of its target;"
+    ;
 
 /* Wrapper for listxattr */
 static PyObject *
@@ -284,27 +286,28 @@ static PyMethodDef xattr_methods[] = {
 };
 
 static char __xattr_doc__[] = \
-"Access extended filesystem attributes\n" \
-"\n" \
-"This module gives access to the extended attributes present\n" \
-"in some operating systems/filesystems. You can list attributes,\n"\
-"get, set and remove them.\n"\
-"The last and optional parameter for all functions is a boolean \n"\
-"value which enables the 'l-' version of the functions - acting\n"\
-"on symbolic links and not their destination.\n"\
-"\n" \
-"Example: \n" \
-">>> import xattr\n" \
-">>> xattr.listxattr(\"file.txt\")\n" \
-"('user.mime_type',)\n" \
-">>> xattr.getxattr(\"file.txt\", \"user.mime_type\")\n" \
-"'text/plain'\n" \
-">>> xattr.setxattr(\"file.txt\", \"user.comment\", \"Simple text file\")\n"\
-">>> xattr.listxattr(\"file.txt\")\n" \
-"('user.mime_type', 'user.comment')\n" \
-">>> xattr.removexattr (\"file.txt\", \"user.comment\")\n" \
-"" \
-;
+    "Access extended filesystem attributes\n"
+    "\n"
+    "This module gives access to the extended attributes present\n"
+    "in some operating systems/filesystems. You can list attributes,\n"
+    "get, set and remove them.\n"
+    "The last and optional parameter for all functions is a boolean \n"
+    "value which enables the 'l-' version of the functions - acting\n"
+    "on symbolic links and not their destination.\n"
+    "\n"
+    "Example: \n"
+    ">>> import xattr\n"
+    ">>> xattr.listxattr(\"file.txt\")\n"
+    "('user.mime_type',)\n"
+    ">>> xattr.getxattr(\"file.txt\", \"user.mime_type\")\n"
+    "'text/plain'\n"
+    ">>> xattr.setxattr(\"file.txt\", \"user.comment\", \"Simple text file\")"
+    "\n"
+    ">>> xattr.listxattr(\"file.txt\")\n"
+    "('user.mime_type', 'user.comment')\n"
+    ">>> xattr.removexattr (\"file.txt\", \"user.comment\")\n"
+    ""
+    ;
 
 void
 initxattr(void)
