@@ -1,3 +1,15 @@
+v0.3.0
+------
+
+ * change licence from GPL to LGPL (3 or later)
+ * change listxattr return type from tuple to a list
+ * developer-related: add unittests
+
+v0.2.2
+------
+
+ * fix listing symlink xattrs
+
 News in 0.2.1
 -------------
 
