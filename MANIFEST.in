@@ -3,3 +3,4 @@ include README
 include xattr.c
 include MANIFEST
 include NEWS
+include COPYING.LGPL-3
