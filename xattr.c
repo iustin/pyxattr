@@ -196,7 +196,7 @@ pyremovexattr(PyObject *self, PyObject *args)
 }
 
 static char __pylistxattr_doc__[] =
-    "Return the tuple of attribute names from a file\n"
+    "Return the list of attribute names for a file\n"
     "\n"
     "Parameters:\n"
     "\t- a string representing filename, or a file-like object,\n"
@@ -218,7 +218,7 @@ pylistxattr(PyObject *self, PyObject *args)
     int ishandle, dolink=0;
     int nalloc, nret;
     PyObject *myarg;
-    PyObject *mytuple;
+    PyObject *mylist;
     int nattrs;
     char *s;
 
@@ -261,12 +261,12 @@ pylistxattr(PyObject *self, PyObject *args)
         nattrs++;
     }
 
-    /* Create the tuple which will hold the result */
-    mytuple = PyTuple_New(nattrs);
+    /* Create the list which will hold the result */
+    mylist = PyList_New(nattrs);
 
-    /* Create and insert the attributes as strings in the tuple */
+    /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
-        PyTuple_SET_ITEM(mytuple, nattrs, PyString_FromString(s));
+        PyList_SET_ITEM(mylist, nattrs, PyString_FromString(s));
         nattrs++;
     }
 
@@ -274,7 +274,7 @@ pylistxattr(PyObject *self, PyObject *args)
     PyMem_Free(buf);
 
     /* Return the result */
-    return mytuple;
+    return mylist;
 }
 
 static PyMethodDef xattr_methods[] = {
