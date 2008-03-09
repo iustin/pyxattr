@@ -1,5 +1,8 @@
 /MANIFEST
 /build
 /dist
+/pyxattr.egg-info
+/test/*.pyc
 /xattr.html
+/xattr.so
 /xattr.txt
