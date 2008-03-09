@@ -1,7 +1,15 @@
-This is the pyxattr module, a Python extension module which gives
-access to the extended attributes available in some operating systems.
+This is the pyxattr module, a Python extension module which gives access
+to the extended attributes for filesystem objects available in some
+operating systems.
 
 For usage details, see the documentation of the module using pydoc.
 The project web page is http://pyxattr.sourceforge.net
 
+You need to have setuptools installed in order to build and install the
+module.
+
 Author: Iustin Pop, <iusty@k1024.org>
+
+Starting with version 0.3, pyxattr is licensed under the GNU LGPL,
+version 3 or any later version (see COPYING.LPGL-3). Previous versions
+were licensed under GPL v2 or later.
