@@ -95,17 +95,25 @@ static ssize_t _remove_obj(target_t *tgt, const char *name) {
         return removexattr(tgt->name, name);
 }
 
-/* Checks if an attribute name matches an optional namespace */
-static int matches_ns(const char *name, const char *ns) {
+/*
+   Checks if an attribute name matches an optional namespace.
+
+   If the namespace is NULL, it will return the name itself.  If the
+   namespace is non-NULL and the name matches, it will return a
+   pointer to the offset in the name after the namespace and the
+   separator. If however the name doesn't match the namespace, it will
+   return NULL.
+*/
+const char *matches_ns(const char *ns, const char *name) {
     size_t ns_size;
     if (ns == NULL)
-        return 1;
+        return name;
     ns_size = strlen(ns);
 
-    if (strlen(name) > ns_size && !strncmp(name, ns, ns_size) &&
+    if (strlen(name) > (ns_size+1) && !strncmp(name, ns, ns_size) &&
         name[ns_size] == '.')
-        return 1;
-    return 0;
+        return name + ns_size + 1;
+    return NULL;
 }
 
 /* Wrapper for getxattr */
@@ -330,7 +338,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         PyObject *my_tuple;
         int missing;
 
-        if(!matches_ns(s, ns))
+        if(matches_ns(ns, s)==NULL)
             continue;
         /* Now retrieve the attribute value */
         missing = 0;
@@ -740,7 +748,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Compute the number of attributes in the list */
     for(s = buf, nattrs = 0; (s - buf) < nret; s += strlen(s) + 1) {
-        if(matches_ns(s, ns))
+        if(matches_ns(ns, s)!=NULL)
             nattrs++;
     }
     /* Create the list which will hold the result */
@@ -748,9 +756,9 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
-        if(matches_ns(s, ns)) {
-            char *short_form = ns == NULL ? s : s + strlen(ns) + 1;
-            PyList_SET_ITEM(mylist, nattrs, PyString_FromString(short_form));
+        const char *name = matches_ns(ns, s);
+        if(name!=NULL) {
+            PyList_SET_ITEM(mylist, nattrs, PyString_FromString(name));
             nattrs++;
         }
     }
