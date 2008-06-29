@@ -34,7 +34,7 @@ static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
 
 /* Combine a namespace string and an attribute name into a
    fully-qualified name */
-static char* merge_ns(const char *ns, const char *name, char **buf) {
+static const char* merge_ns(const char *ns, const char *name, char **buf) {
     if(ns != NULL) {
         int cnt;
         size_t new_size = strlen(ns) + 1 + strlen(name) + 1;
@@ -65,7 +65,8 @@ static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
         return listxattr(tgt->name, list, size);
 }
 
-static ssize_t _get_obj(target_t *tgt, char *name, void *value, size_t size) {
+static ssize_t _get_obj(target_t *tgt, const char *name, void *value,
+                        size_t size) {
     if(tgt->type == T_FD)
         return fgetxattr(tgt->fd, name, value, size);
     else if (tgt->type == T_LINK)
@@ -74,7 +75,8 @@ static ssize_t _get_obj(target_t *tgt, char *name, void *value, size_t size) {
         return getxattr(tgt->name, name, value, size);
 }
 
-static ssize_t _set_obj(target_t *tgt, char *name, void *value, size_t size,
+static ssize_t _set_obj(target_t *tgt, const char *name,
+                        const void *value, size_t size,
                         int flags) {
     if(tgt->type == T_FD)
         return fsetxattr(tgt->fd, name, value, size, flags);
@@ -84,7 +86,7 @@ static ssize_t _set_obj(target_t *tgt, char *name, void *value, size_t size,
         return setxattr(tgt->name, name, value, size, flags);
 }
 
-static ssize_t _remove_obj(target_t *tgt, char *name) {
+static ssize_t _remove_obj(target_t *tgt, const char *name) {
     if(tgt->type == T_FD)
         return fremovexattr(tgt->fd, name);
     else if (tgt->type == T_LINK)
@@ -397,7 +399,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     target_t tgt;
     char *ns = NULL;
     char *newname;
-    char *full_name;
+    const char *full_name;
     static char *kwlist[] = {"item", "name", "value", "flags",
                              "nofollow", "namespace", NULL};
 
