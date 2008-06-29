@@ -263,7 +263,7 @@ static char __get_all_doc__[] =
     "  [('user.mime-type', 'plain/text'), ('user.comment', 'test'),"
     " ('system.posix_acl_access', '\\x02\\x00...')]\n"
     "  >>> xattr.get_all('/path/to/file', namespace=xattr.NS_USER)\n"
-    "  [('user.mime-type', 'plain/text'), ('user.comment', 'test')]\n"
+    "  [('mime-type', 'plain/text'), ('comment', 'test')]\n"
     "\n"
     "@param item: the item to query; either a string representing the"
     " filename, or a file-like object, or a file descriptor\n"
@@ -276,7 +276,9 @@ static char __get_all_doc__[] =
     " the attributes for the link itself will be returned, instead of the"
     " attributes of the target\n"
     "@type nofollow: boolean\n"
-    "@return: list of tuples (name, value)\n"
+    "@return: list of tuples (name, value); note that if a namespace\n"
+    "argument was passed, it (and the separator) will be stripped from\n"
+    "the names returned\n"
     "@rtype: list\n"
     "@raise EnvironmentError: system errors will raise an exception\n"
     "@since: 0.4\n"
@@ -337,8 +339,9 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     for(s = buf_list; s - buf_list < nlist; s += strlen(s) + 1) {
         PyObject *my_tuple;
         int missing;
+        const char *name;
 
-        if(matches_ns(ns, s)==NULL)
+        if((name=matches_ns(ns, s))==NULL)
             continue;
         /* Now retrieve the attribute value */
         missing = 0;
@@ -364,7 +367,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         }
         if(missing)
             continue;
-        my_tuple = Py_BuildValue("ss#", s, buf_val, nval);
+        my_tuple = Py_BuildValue("ss#", name, buf_val, nval);
 
         PyList_Append(mylist, my_tuple);
         Py_DECREF(my_tuple);
@@ -700,8 +703,8 @@ static char __list_doc__[] =
     "@param namespace: if given, the attribute must not contain the namespace"
     " itself, but instead the namespace will be taken from this parameter\n"
     "@type namespace: string\n"
-    "@return: list of strings; note that if the namespace attribute has been\n"
-    "passed, the names will have the namespace prefix stripped\n"
+    "@return: list of strings; note that if a namespace argument was\n"
+    "passed, it (and the separator) will be stripped from the names returned\n"
     "@rtype: list\n"
     "@raise EnvironmentError: system errors will raise an exception\n"
     "@since: 0.4\n"
