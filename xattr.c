@@ -110,7 +110,7 @@ static int matches_ns(const char *name, const char *ns) {
 
 /* Wrapper for getxattr */
 static char __pygetxattr_doc__[] =
-    "Get the value of a given extended attribute.\n"
+    "Get the value of a given extended attribute (deprecated).\n"
     "\n"
     "Parameters:\n"
     "  - a string representing filename, or a file-like object,\n"
@@ -122,8 +122,7 @@ static char __pygetxattr_doc__[] =
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
     "    of its target;\n"
-    "@deprecated: this function has been replace with the L{get} function"
-    " which replaces the positional parameters with keyword ones\n"
+    "@deprecated: this function has been deprecated by the L{get} function\n"
     ;
 
 static PyObject *
@@ -174,16 +173,22 @@ pygetxattr(PyObject *self, PyObject *args)
 static char __get_doc__[] =
     "Get the value of a given extended attribute.\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing filename, or a file-like object,\n"
-    "    or a file descriptor; this represents the file on \n"
-    "    which to act\n"
-    "  - a string, representing the attribute whose value to retrieve;\n"
-    "    usually in form of system.posix_acl or user.mime_type\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;\n"
+    "@param item: the item to query; either a string representing the"
+    " filename, or a file-like object, or a file descriptor\n"
+    "@param name: the attribute whose value to set; usually in form of"
+    " system.posix_acl or user.mime_type\n"
+    "@type name: string\n"
+    "@param nofollow: if given and True, and the function is passed a"
+    " filename that points to a symlink, the function will act on the symlink"
+    " itself instead of its target\n"
+    "@type nofollow: boolean\n"
+    "@param namespace: if given, the attribute must not contain the namespace"
+    " itself, but instead the namespace will be taken from this parameter\n"
+    "@type namespace: string\n"
+    "@return: the value of the extended attribute (can contain NULLs)\n"
+    "@rtype: string\n"
+    "@raise EnvironmentError: system errors will raise an exception\n"
+    "@since: 0.4\n"
     ;
 
 static PyObject *
@@ -264,6 +269,9 @@ static char __get_all_doc__[] =
     " attributes of the target\n"
     "@type nofollow: boolean\n"
     "@return: list of tuples (name, value)\n"
+    "@rtype: list\n"
+    "@raise EnvironmentError: system errors will raise an exception\n"
+    "@since: 0.4\n"
     ;
 
 static PyObject *
@@ -372,7 +380,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static char __pysetxattr_doc__[] =
-    "Set the value of a given extended attribute.\n"
+    "Set the value of a given extended attribute (deprecated).\n"
     "Be carefull in case you want to set attributes on symbolic\n"
     "links, you have to use all the 5 parameters; use 0 for the \n"
     "flags value if you want the default behavior (create or "
@@ -396,8 +404,7 @@ static char __pysetxattr_doc__[] =
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
     "    of its target;\n"
-    "@deprecated: this function has been deprecated by the new L{set}"
-    " function\n"
+    "@deprecated: this function has been deprecated by the L{set} function\n"
     ;
 
 /* Wrapper for setxattr */
@@ -453,6 +460,9 @@ static char __set_doc__[] =
     "@param namespace: if given, the attribute must not contain the namespace"
     " itself, but instead the namespace will be taken from this parameter\n"
     "@type namespace: string\n"
+    "@rtype: None\n"
+    "@raise EnvironmentError: system errors will raise an exception\n"
+    "@since: 0.4\n"
     ;
 
 /* Wrapper for setxattr */
@@ -495,7 +505,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static char __pyremovexattr_doc__[] =
-    "Remove an attribute from a file\n"
+    "Remove an attribute from a file (deprecated)\n"
     "\n"
     "Parameters:\n"
     "  - a string representing filename, or a file-like object,\n"
@@ -507,6 +517,8 @@ static char __pyremovexattr_doc__[] =
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
     "    of its target;\n"
+    "@deprecated: this function has been deprecated by the L{remove}"
+    " function\n"
     ;
 
 /* Wrapper for removexattr */
@@ -550,6 +562,9 @@ static char __remove_doc__[] =
     "@param namespace: if given, the attribute must not contain the namespace"
     " itself, but instead the namespace will be taken from this parameter\n"
     "@type namespace: string\n"
+    "@since: 0.4\n"
+    "@rtype: None\n"
+    "@raise EnvironmentError: system errors will raise an exception\n"
     ;
 
 /* Wrapper for removexattr */
@@ -588,7 +603,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static char __pylistxattr_doc__[] =
-    "Return the list of attribute names for a file\n"
+    "Return the list of attribute names for a file (deprecated)\n"
     "\n"
     "Parameters:\n"
     "  - a string representing filename, or a file-like object,\n"
@@ -598,6 +613,8 @@ static char __pylistxattr_doc__[] =
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
     "    of its target;\n"
+    "@deprecated: this function has been deprecated by the L{list}"
+    " function\n"
     ;
 
 /* Wrapper for listxattr */
@@ -660,6 +677,12 @@ pylistxattr(PyObject *self, PyObject *args)
 static char __list_doc__[] =
     "Return the list of attribute names for a file\n"
     "\n"
+    "Example:\n"
+    "  >>> xattr.list('/path/to/file')\n"
+    "  ['user.test', 'user.comment', 'system.posix_acl_access']\n"
+    "  >>> xattr.list('/path/to/file', namespace=xattr.NS_USER)\n"
+    "  ['test', 'comment']\n"
+    "\n"
     "@param item: the item to query; either a string representing the"
     " filename, or a file-like object, or a file descriptor\n"
     "@param nofollow: if given and True, and the function is passed a"
@@ -669,6 +692,11 @@ static char __list_doc__[] =
     "@param namespace: if given, the attribute must not contain the namespace"
     " itself, but instead the namespace will be taken from this parameter\n"
     "@type namespace: string\n"
+    "@return: list of strings; note that if the namespace attribute has been\n"
+    "passed, the names will have the namespace prefix stripped\n"
+    "@rtype: list\n"
+    "@raise EnvironmentError: system errors will raise an exception\n"
+    "@since: 0.4\n"
     ;
 
 /* Wrapper for listxattr */
