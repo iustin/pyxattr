@@ -8,6 +8,9 @@ import errno
 
 import xattr
 
+TEST_DIR = os.environ.get("TESTDIR", ".")
+
+
 class xattrTest(unittest.TestCase):
     USER_ATTR = "user.test"
     USER_VAL = "abc"
@@ -27,13 +30,13 @@ class xattrTest(unittest.TestCase):
 
     def _getfile(self):
         """create a temp file"""
-        fh, fname = tempfile.mkstemp(".test", "xattr-", ".")
+        fh, fname = tempfile.mkstemp(".test", "xattr-", TEST_DIR)
         self.rmfiles.append(fname)
         return fh, fname
 
     def _getdir(self):
         """create a temp dir"""
-        dname = tempfile.mkdtemp(".test", "xattr-", ".")
+        dname = tempfile.mkdtemp(".test", "xattr-", TEST_DIR)
         self.rmdirs.append(dname)
         return dname
 
