@@ -175,16 +175,16 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         listxattr(file, buf_list, nalloc);
 
     if(nlist == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        PyErr_SetFromErrno(PyExc_IOError);
+        goto free_buf_list;
     }
 
     /* Create the list which will hold the result */
     mylist = PyList_New(0);
     nalloc = 256;
     if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
-        PyMem_Free(buf_list);
         PyErr_NoMemory();
-        return NULL;
+        goto free_list;
     }
 
     /* Create and insert the attributes as strings in the list */
@@ -210,11 +210,8 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                         dolink ?
                         lgetxattr(file, s, NULL, 0) :
                         getxattr(file, s, NULL, 0);
-                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL) {
-                        PyMem_Free(buf_list);
-                        PyErr_NoMemory();
-                        return NULL;
-                    }
+                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL)
+                        goto free_list;
                     nalloc = nval;
                     continue;
                 } else if(errno == ENODATA || errno == ENOATTR) {
@@ -223,9 +220,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                     missing = 1;
                     break;
                 }
-                PyMem_Free(buf_list);
-                PyMem_Free(buf_val);
-                return PyErr_SetFromErrno(PyExc_IOError);
+                goto exit_errno;
             }
             break;
         }
@@ -243,7 +238,15 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Return the result */
     return mylist;
-
+ exit_errno:
+    PyErr_SetFromErrno(PyExc_IOError);
+ free_buf_val:
+    PyMem_Free(buf_val);
+ free_list:
+    Py_DECREF(mylist);
+ free_buf_list:
+    PyMem_Free(buf_list);
+    return NULL;
 }
 
 
