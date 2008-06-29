@@ -64,8 +64,11 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.listxattr(item, symlink), [self.USER_ATTR])
         self.failUnlessEqual(xattr.getxattr(item, self.USER_ATTR, symlink),
                              self.USER_VAL)
+        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
+                             [(self.USER_ATTR, self.USER_VAL)])
         xattr.removexattr(item, self.USER_ATTR)
         self.failUnlessEqual(xattr.listxattr(item, symlink), [])
+        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink), [])
         self.failUnlessRaises(EnvironmentError, xattr.removexattr,
                               item, self.USER_ATTR)
 
@@ -73,10 +76,13 @@ class xattrTest(unittest.TestCase):
         """test no attributes"""
         fh, fname = self._getfile()
         self.failUnlessEqual(xattr.listxattr(fname), [])
+        self.failUnlessEqual(xattr.get_all(fname), [])
         dname = self._getdir()
         self.failUnlessEqual(xattr.listxattr(dname), [])
+        self.failUnlessEqual(xattr.get_all(dname), [])
         sname = self._getsymlink()
         self.failUnlessEqual(xattr.listxattr(sname, True), [])
+        self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
 
     def testFileByName(self):
         """test set and retrieve one attribute by file name"""
@@ -106,6 +112,10 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.listxattr(fh), [self.USER_ATTR])
         self.failUnlessEqual(xattr.getxattr(fo, self.USER_ATTR),
                              self.USER_VAL)
+        self.failUnlessEqual(xattr.get_all(fo),
+                             [(self.USER_ATTR, self.USER_VAL)])
+        self.failUnlessEqual(xattr.get_all(fname),
+                             [(self.USER_ATTR, self.USER_VAL)])
 
     def testDirOps(self):
         """test attribute setting on directories"""
@@ -126,6 +136,7 @@ class xattrTest(unittest.TestCase):
         xattr.setxattr(fname, self.USER_ATTR, BINVAL)
         self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
         self.failUnlessEqual(xattr.getxattr(fname, self.USER_ATTR), BINVAL)
+        self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
         xattr.removexattr(fname, self.USER_ATTR)
 
     def testManyOps(self):
@@ -138,3 +149,6 @@ class xattrTest(unittest.TestCase):
         for i in range(131072):
             self.failUnlessEqual(xattr.getxattr(fh, self.USER_ATTR),
                                  self.USER_VAL)
+        for i in range(131072):
+            self.failUnlessEqual(xattr.get_all(fh),
+                                 [(self.USER_ATTR, self.USER_VAL)])
