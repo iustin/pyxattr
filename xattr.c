@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <attr/xattr.h>
+#include <stdio.h>
 
 /* the estimated (startup) attribute buffer size in
    multi-operations */
@@ -29,6 +30,30 @@ static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
         return 0;
     }
     return 1;
+}
+
+/* Combine a namespace string and an attribute name into a
+   fully-qualified name */
+static char* merge_ns(const char *ns, const char *name, char **buf) {
+    if(ns != NULL) {
+        int cnt;
+        size_t new_size = strlen(ns) + 1 + strlen(name) + 1;
+        if((*buf = PyMem_Malloc(new_size)) == NULL) {
+            PyErr_NoMemory();
+            return NULL;
+        }
+        cnt = snprintf(*buf, new_size, "%s.%s", ns, name);
+        if(cnt > new_size || cnt < 0) {
+            PyErr_SetString(PyExc_ValueError,
+                            "can't format the attribute name");
+            PyMem_Free(*buf);
+            return NULL;
+        }
+        return *buf;
+    } else {
+        *buf = NULL;
+        return name;
+    }
 }
 
 static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
@@ -299,7 +324,9 @@ static char __pysetxattr_doc__[] =
     "  - (optional) a boolean value (defaults to false), which, if\n"
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
-    "    of its target;"
+    "    of its target;\n"
+    "@deprecated: this function has been deprecated by the new L{set}"
+    " function\n"
     ;
 
 /* Wrapper for setxattr */
@@ -329,6 +356,72 @@ pysetxattr(PyObject *self, PyObject *args)
     /* Return the result */
     Py_RETURN_NONE;
 }
+
+static char __set_doc__[] =
+    "Set the value of a given extended attribute.\n"
+    "\n"
+    "@param item: the item to query; either a string representing the"
+    " filename, or a file-like object, or a file descriptor\n"
+    "@param name: the attribute whose value to set; usually in form of"
+    " system.posix_acl or user.mime_type\n"
+    "@type name: string\n"
+    "@param value: a string, possibly with embedded NULLs; note that there"
+    " are restrictions regarding the size of the value, for"
+    " example, for ext2/ext3, maximum size is the block size\n"
+    "@type value: string\n"
+    "@param flags: if 0 or ommited the attribute will be"
+    " created or replaced; if L{XATTR_CREATE}, the attribute"
+    " will be created, giving an error if it already exists;"
+    " if L{XATTR_REPLACE}, the attribute will be replaced,"
+    " giving an error if it doesn't exists;\n"
+    "@type flags: integer\n"
+    "@param nofollow: if given and True, and the function is passed a"
+    " filename that points to a symlink, the function will act on the symlink"
+    " itself instead of its target\n"
+    "@type nofollow: boolean\n"
+    "@param namespace: if given, the attribute must not contain the namespace"
+    " itself, but instead the namespace will be taken from this parameter\n"
+    "@type namespace: string\n"
+    ;
+
+/* Wrapper for setxattr */
+static PyObject *
+xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    PyObject *myarg;
+    int nofollow=0;
+    char *attrname;
+    char *buf;
+    int bufsize, nret;
+    int flags = 0;
+    target_t tgt;
+    char *ns = NULL;
+    char *newname;
+    char *full_name;
+    static char *kwlist[] = {"item", "name", "value", "flags",
+                             "nofollow", "namespace", NULL};
+
+    /* Parse the arguments */
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oss#|iiz", kwlist,
+                                     &myarg, &attrname,
+                                     &buf, &bufsize, &flags, &nofollow, &ns))
+        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow))
+        return NULL;
+
+    full_name = merge_ns(ns, attrname, &newname);
+    /* Set the attribute's value */
+    nret = _set_obj(&tgt, full_name, buf, bufsize, flags);
+    if(newname != NULL)
+        PyMem_Free(newname);
+    if(nret == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Return the result */
+    Py_RETURN_NONE;
+}
+
 
 static char __pyremovexattr_doc__[] =
     "Remove an attribute from a file\n"
@@ -446,6 +539,8 @@ static PyMethodDef xattr_methods[] = {
     {"get_all", (PyCFunction) get_all, METH_VARARGS | METH_KEYWORDS,
      __get_all_doc__ },
     {"setxattr",  pysetxattr, METH_VARARGS, __pysetxattr_doc__ },
+    {"set",  (PyCFunction) xattr_set, METH_VARARGS | METH_KEYWORDS,
+     __set_doc__ },
     {"removexattr",  pyremovexattr, METH_VARARGS, __pyremovexattr_doc__ },
     {"listxattr",  pylistxattr, METH_VARARGS, __pylistxattr_doc__ },
     {NULL, NULL, 0, NULL}        /* Sentinel */
