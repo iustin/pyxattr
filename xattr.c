@@ -42,7 +42,9 @@ static char __pygetxattr_doc__[] =
     "  - (optional) a boolean value (defaults to false), which, if\n"
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
-    "    of its target;"
+    "    of its target;\n"
+    "@deprecated: this function has been replace with the L{get_all} function"
+    " which replaces the positional parameters with keyword ones\n"
     ;
 
 static PyObject *
@@ -103,14 +105,27 @@ pygetxattr(PyObject *self, PyObject *args)
 static char __get_all_doc__[] =
     "Get all the extended attributes of an item.\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing filename, or a file-like object,\n"
-    "    or a file descriptor; this represents the file on \n"
-    "    which to act\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;"
+    "This function performs a bulk-get of all extended attribute names\n"
+    "and the corresponding value.\n"
+    "Example:\n"
+    "  >>> xattr.get_all('/path/to/file')\n"
+    "  [('user.mime-type', 'plain/text'), ('user.comment', 'test'),"
+    " ('system.posix_acl_access', '\\x02\\x00...')]\n"
+    "  >>> xattr.get_all('/path/to/file', namespace=xattr.NS_USER)\n"
+    "  [('user.mime-type', 'plain/text'), ('user.comment', 'test')]\n"
+    "\n"
+    "@param item: the item to query; either a string representing the"
+    " filename, or a file-like object, or a file descriptor\n"
+    "@keyword namespace: an optional namespace for filtering the"
+    " attributes; for example, querying all user attributes can be"
+    " accomplished by passing namespace=L{NS_USER}\n"
+    "@type namespace: string\n"
+    "@keyword noderef: if passed and true, if the target file is a symbolic"
+    " link,"
+    " the attributes for the link itself will be returned, instead of the"
+    " attributes of the target\n"
+    "@type noderef: boolean\n"
+    "@return: list of tuples (name, value)\n"
     ;
 
 static PyObject *
