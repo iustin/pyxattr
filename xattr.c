@@ -1,6 +1,10 @@
 #include <Python.h>
 #include <attr/xattr.h>
 
+/* the estimated (startup) attribute buffer size in
+   multi-operations */
+#define ESTIMATE_ATTR_SIZE 256
+
 typedef enum {T_FD, T_PATH, T_LINK} target_e;
 
 typedef struct {
@@ -211,7 +215,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Create the list which will hold the result */
     mylist = PyList_New(0);
-    nalloc = 256;
+    nalloc = ESTIMATE_ATTR_SIZE;
     if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
         goto free_list;
@@ -262,7 +266,6 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     return mylist;
  exit_errno:
     PyErr_SetFromErrno(PyExc_IOError);
- free_buf_val:
     PyMem_Free(buf_val);
  free_list:
     Py_DECREF(mylist);
