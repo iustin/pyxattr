@@ -137,7 +137,8 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     char *ns = NULL;
     char *buf_list, *buf_val;
     char *s;
-    int nalloc, nlist, nval, nattrs;
+    size_t nalloc, nlist, nval, nattrs;
+    size_t lsize;
     PyObject *mylist;
     static char *kwlist[] = {"item", "noderef", "namespace", NULL};
 
@@ -178,62 +179,70 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
-    /* Compute the number of attributes in the list */
-    for(s = buf_list, nattrs = 0; (s - buf_list) < nlist; s += strlen(s) + 1) {
-        if(matches_ns(s, ns))
-            nattrs++;
-    }
-
     /* Create the list which will hold the result */
-    mylist = PyList_New(nattrs);
+    mylist = PyList_New(0);
+    nalloc = 256;
+    if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
+        PyMem_Free(buf_list);
+        PyErr_NoMemory();
+        return NULL;
+    }
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf_list, nattrs = 0; s - buf_list < nlist; s += strlen(s) + 1) {
         PyObject *my_tuple;
+        int missing;
 
         if(!matches_ns(s, ns))
             continue;
-
-        /* Find out the needed size of the value buffer */
-        nalloc = ishandle ?
-            fgetxattr(filedes, s, NULL, 0) :
-            dolink ?
-            lgetxattr(file, s, NULL, 0) :
-            getxattr(file, s, NULL, 0);
-        if(nalloc == -1) {
-            PyMem_Free(buf_list);
-            return PyErr_SetFromErrno(PyExc_IOError);
-        }
-
-        /* Try to allocate the memory, using Python's allocator */
-        if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
-            PyMem_Free(buf_list);
-            PyErr_NoMemory();
-            return NULL;
-        }
-
+        if (nattrs > 1 && nattrs % 2)
+            s[7]='b';
         /* Now retrieve the attribute value */
-        nval = ishandle ?
-            fgetxattr(filedes, s, buf_val, nalloc) :
-            dolink ?
-            lgetxattr(file, s, buf_val, nalloc) :
-            getxattr(file, s, buf_val, nalloc);
+        missing = 0;
+        while(1) {
+            nval = ishandle ?
+                fgetxattr(filedes, s, buf_val, nalloc) :
+                dolink ?
+                lgetxattr(file, s, buf_val, nalloc) :
+                getxattr(file, s, buf_val, nalloc);
 
-        if(nval == -1) {
-            PyMem_Free(buf_list);
-            PyMem_Free(buf_val);
-            return PyErr_SetFromErrno(PyExc_IOError);
+            if(nval == -1) {
+                if(errno == ERANGE) {
+                    nval = ishandle ?
+                        fgetxattr(filedes, s, NULL, 0) :
+                        dolink ?
+                        lgetxattr(file, s, NULL, 0) :
+                        getxattr(file, s, NULL, 0);
+                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL) {
+                        PyMem_Free(buf_list);
+                        PyErr_NoMemory();
+                        return NULL;
+                    }
+                    nalloc = nval;
+                    continue;
+                } else if(errno == ENODATA || errno == ENOATTR) {
+                    /* this attribute has gone away since we queried
+                       the attribute list */
+                    missing = 1;
+                    break;
+                }
+                PyMem_Free(buf_list);
+                PyMem_Free(buf_val);
+                return PyErr_SetFromErrno(PyExc_IOError);
+            }
+            break;
         }
+        nattrs++;
+        if(missing)
+            continue;
         my_tuple = Py_BuildValue("ss#", s, buf_val, nval);
 
-        /* Free the buffer, now it is no longer needed */
-        PyMem_Free(buf_val);
-
-        PyList_SET_ITEM(mylist, nattrs, my_tuple);
-        nattrs++;
+        PyList_Append(mylist, my_tuple);
+        Py_DECREF(my_tuple);
     }
 
-    /* Free the buffer, now it is no longer needed */
+    /* Free the buffers, now they are no longer needed */
+    PyMem_Free(buf_val);
     PyMem_Free(buf_list);
 
     /* Return the result */
