@@ -535,6 +535,58 @@ pyremovexattr(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static char __remove_doc__[] =
+    "Remove an attribute from a file\n"
+    "\n"
+    "@param item: the item to query; either a string representing the"
+    " filename, or a file-like object, or a file descriptor\n"
+    "@param name: the attribute whose value to set; usually in form of"
+    " system.posix_acl or user.mime_type\n"
+    "@type name: string\n"
+    "@param nofollow: if given and True, and the function is passed a"
+    " filename that points to a symlink, the function will act on the symlink"
+    " itself instead of its target\n"
+    "@type nofollow: boolean\n"
+    "@param namespace: if given, the attribute must not contain the namespace"
+    " itself, but instead the namespace will be taken from this parameter\n"
+    "@type namespace: string\n"
+    ;
+
+/* Wrapper for removexattr */
+static PyObject *
+xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    PyObject *myarg;
+    int nofollow=0;
+    char *attrname, *name_buf;
+    char *ns = NULL;
+    const char *full_name;
+    int nret;
+    target_t tgt;
+    static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
+
+    /* Parse the arguments */
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|iz", kwlist,
+                                     &myarg, &attrname, &nofollow, &ns))
+        return NULL;
+
+    if(!convertObj(myarg, &tgt, nofollow))
+        return NULL;
+    full_name = merge_ns(ns, attrname, &name_buf);
+    if(full_name == NULL)
+        return NULL;
+
+    /* Remove the attribute */
+    nret = _remove_obj(&tgt, full_name);
+    PyMem_Free(name_buf);
+    if(nret == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Return the result */
+    Py_RETURN_NONE;
+}
+
 static char __pylistxattr_doc__[] =
     "Return the list of attribute names for a file\n"
     "\n"
@@ -615,6 +667,8 @@ static PyMethodDef xattr_methods[] = {
     {"set",  (PyCFunction) xattr_set, METH_VARARGS | METH_KEYWORDS,
      __set_doc__ },
     {"removexattr",  pyremovexattr, METH_VARARGS, __pyremovexattr_doc__ },
+    {"remove",  (PyCFunction) xattr_remove, METH_VARARGS | METH_KEYWORDS,
+     __remove_doc__ },
     {"listxattr",  pylistxattr, METH_VARARGS, __pylistxattr_doc__ },
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };

@@ -95,10 +95,10 @@ class xattrTest(unittest.TestCase):
                              self.USER_VAL)
         self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
                              [(self.USER_ATTR, self.USER_VAL)])
-        xattr.removexattr(item, self.USER_ATTR)
+        xattr.remove(item, self.USER_ATTR)
         self.failUnlessEqual(xattr.listxattr(item, symlink), [])
         self.failUnlessEqual(xattr.get_all(item, nofollow=symlink), [])
-        self.failUnlessRaises(EnvironmentError, xattr.removexattr,
+        self.failUnlessRaises(EnvironmentError, xattr.remove,
                               item, self.USER_ATTR)
 
     def testNoXattr(self):
@@ -221,7 +221,7 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
         self.failUnlessEqual(xattr.get(fname, self.USER_ATTR), BINVAL)
         self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
-        xattr.removexattr(fname, self.USER_ATTR)
+        xattr.remove(fname, self.USER_ATTR)
 
     def testManyOpsDeprecated(self):
         """test many ops (deprecated functions)"""
