@@ -91,7 +91,7 @@ class xattrTest(unittest.TestCase):
                               self.USER_ATTR, self.USER_VAL,
                               flags=xattr.XATTR_CREATE)
         self.failUnlessEqual(xattr.listxattr(item, symlink), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(item, self.USER_ATTR, symlink),
+        self.failUnlessEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
                              self.USER_VAL)
         self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
                              [(self.USER_ATTR, self.USER_VAL)])
@@ -172,7 +172,7 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.listxattr(fname), [])
         xattr.set(fname, self.USER_ATTR, self.USER_VAL)
         self.failUnlessEqual(xattr.listxattr(fh), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(fo, self.USER_ATTR),
+        self.failUnlessEqual(xattr.get(fo, self.USER_ATTR),
                              self.USER_VAL)
         self.failUnlessEqual(xattr.get_all(fo),
                              [(self.USER_ATTR, self.USER_VAL)])
@@ -219,7 +219,7 @@ class xattrTest(unittest.TestCase):
         BINVAL = "abc" + '\0' + "def"
         xattr.set(fname, self.USER_ATTR, BINVAL)
         self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(fname, self.USER_ATTR), BINVAL)
+        self.failUnlessEqual(xattr.get(fname, self.USER_ATTR), BINVAL)
         self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
         xattr.removexattr(fname, self.USER_ATTR)
 
@@ -245,7 +245,7 @@ class xattrTest(unittest.TestCase):
         for i in range(self.MANYOPS_COUNT):
             self.failUnlessEqual(xattr.listxattr(fh), VL)
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.getxattr(fh, self.USER_ATTR),
+            self.failUnlessEqual(xattr.get(fh, self.USER_ATTR),
                                  self.USER_VAL)
         for i in range(self.MANYOPS_COUNT):
             self.failUnlessEqual(xattr.get_all(fh),

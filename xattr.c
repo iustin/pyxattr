@@ -122,7 +122,7 @@ static char __pygetxattr_doc__[] =
     "    the file name given is a symbolic link, makes the\n"
     "    function operate on the symbolic link itself instead\n"
     "    of its target;\n"
-    "@deprecated: this function has been replace with the L{get_all} function"
+    "@deprecated: this function has been replace with the L{get} function"
     " which replaces the positional parameters with keyword ones\n"
     ;
 
@@ -164,6 +164,75 @@ pygetxattr(PyObject *self, PyObject *args)
     res = PyString_FromStringAndSize(buf, nret);
 
     /* Free the buffer, now it is no longer needed */
+    PyMem_Free(buf);
+
+    /* Return the result */
+    return res;
+}
+
+/* Wrapper for getxattr */
+static char __get_doc__[] =
+    "Get the value of a given extended attribute.\n"
+    "\n"
+    "Parameters:\n"
+    "  - a string representing filename, or a file-like object,\n"
+    "    or a file descriptor; this represents the file on \n"
+    "    which to act\n"
+    "  - a string, representing the attribute whose value to retrieve;\n"
+    "    usually in form of system.posix_acl or user.mime_type\n"
+    "  - (optional) a boolean value (defaults to false), which, if\n"
+    "    the file name given is a symbolic link, makes the\n"
+    "    function operate on the symbolic link itself instead\n"
+    "    of its target;\n"
+    ;
+
+static PyObject *
+xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    PyObject *myarg;
+    target_t tgt;
+    int nofollow=0;
+    char *attrname, *namebuf;
+    const char *fullname;
+    char *buf;
+    char *ns = NULL;
+    int nalloc, nret;
+    PyObject *res;
+    static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
+
+    /* Parse the arguments */
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|iz", kwlist,
+                                     &myarg, &attrname, &nofollow, &ns))
+        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow))
+        return NULL;
+
+    fullname = merge_ns(ns, attrname, &namebuf);
+
+    /* Find out the needed size of the buffer */
+    if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Try to allocate the memory, using Python's allocator */
+    if((buf = PyMem_Malloc(nalloc)) == NULL) {
+        PyMem_Free(namebuf);
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    /* Now retrieve the attribute value */
+    if((nret = _get_obj(&tgt, fullname, buf, nalloc)) == -1) {
+        PyMem_Free(buf);
+        PyMem_Free(namebuf);
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Create the string which will hold the result */
+    res = PyString_FromStringAndSize(buf, nret);
+
+    /* Free the buffers, they are no longer needed */
+    PyMem_Free(namebuf);
     PyMem_Free(buf);
 
     /* Return the result */
@@ -538,6 +607,8 @@ pylistxattr(PyObject *self, PyObject *args)
 
 static PyMethodDef xattr_methods[] = {
     {"getxattr",  pygetxattr, METH_VARARGS, __pygetxattr_doc__ },
+    {"get",  (PyCFunction) xattr_get, METH_VARARGS | METH_KEYWORDS,
+     __get_doc__ },
     {"get_all", (PyCFunction) get_all, METH_VARARGS | METH_KEYWORDS,
      __get_all_doc__ },
     {"setxattr",  pysetxattr, METH_VARARGS, __pysetxattr_doc__ },
