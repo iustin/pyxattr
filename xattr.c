@@ -657,6 +657,83 @@ pylistxattr(PyObject *self, PyObject *args)
     return mylist;
 }
 
+static char __list_doc__[] =
+    "Return the list of attribute names for a file\n"
+    "\n"
+    "@param item: the item to query; either a string representing the"
+    " filename, or a file-like object, or a file descriptor\n"
+    "@param nofollow: if given and True, and the function is passed a"
+    " filename that points to a symlink, the function will act on the symlink"
+    " itself instead of its target\n"
+    "@type nofollow: boolean\n"
+    "@param namespace: if given, the attribute must not contain the namespace"
+    " itself, but instead the namespace will be taken from this parameter\n"
+    "@type namespace: string\n"
+    ;
+
+/* Wrapper for listxattr */
+static PyObject *
+xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    char *buf;
+    int nofollow=0;
+    int nalloc, nret;
+    PyObject *myarg;
+    PyObject *mylist;
+    char *ns = NULL;
+    int nattrs;
+    char *s;
+    target_t tgt;
+    static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
+
+    /* Parse the arguments */
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
+                          &myarg, &nofollow, &ns))
+        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow))
+        return NULL;
+
+    /* Find out the needed size of the buffer */
+    if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Try to allocate the memory, using Python's allocator */
+    if((buf = PyMem_Malloc(nalloc)) == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    /* Now retrieve the list of attributes */
+    if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
+        PyMem_Free(buf);
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Compute the number of attributes in the list */
+    for(s = buf, nattrs = 0; (s - buf) < nret; s += strlen(s) + 1) {
+        if(matches_ns(s, ns))
+            nattrs++;
+    }
+    /* Create the list which will hold the result */
+    mylist = PyList_New(nattrs);
+
+    /* Create and insert the attributes as strings in the list */
+    for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
+        if(matches_ns(s, ns)) {
+            char *short_form = ns == NULL ? s : s + strlen(ns) + 1;
+            PyList_SET_ITEM(mylist, nattrs, PyString_FromString(short_form));
+            nattrs++;
+        }
+    }
+
+    /* Free the buffer, now it is no longer needed */
+    PyMem_Free(buf);
+
+    /* Return the result */
+    return mylist;
+}
+
 static PyMethodDef xattr_methods[] = {
     {"getxattr",  pygetxattr, METH_VARARGS, __pygetxattr_doc__ },
     {"get",  (PyCFunction) xattr_get, METH_VARARGS | METH_KEYWORDS,
@@ -670,6 +747,8 @@ static PyMethodDef xattr_methods[] = {
     {"remove",  (PyCFunction) xattr_remove, METH_VARARGS | METH_KEYWORDS,
      __remove_doc__ },
     {"listxattr",  pylistxattr, METH_VARARGS, __pylistxattr_doc__ },
+    {"list",  (PyCFunction) xattr_list, METH_VARARGS | METH_KEYWORDS,
+     __list_doc__ },
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

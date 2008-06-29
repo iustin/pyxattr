@@ -78,7 +78,7 @@ class xattrTest(unittest.TestCase):
 
     def _checkListSetGet(self, item, symlink=False):
         """check list, set, get operations against an item"""
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [])
+        self.failUnlessEqual(xattr.list(item, symlink), [])
         self.failUnlessRaises(EnvironmentError, xattr.set, item,
                               self.USER_ATTR, self.USER_VAL,
                               flags=xattr.XATTR_REPLACE)
@@ -93,19 +93,19 @@ class xattrTest(unittest.TestCase):
         self.failUnlessRaises(EnvironmentError, xattr.set, item,
                               self.USER_ATTR, self.USER_VAL,
                               flags=xattr.XATTR_CREATE)
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [self.USER_ATTR])
+        self.failUnlessEqual(xattr.list(item, symlink), [self.USER_ATTR])
         self.failUnlessEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
                              self.USER_VAL)
         self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
                              [(self.USER_ATTR, self.USER_VAL)])
         xattr.remove(item, self.USER_ATTR)
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [])
+        self.failUnlessEqual(xattr.list(item, symlink), [])
         self.failUnlessEqual(xattr.get_all(item, nofollow=symlink), [])
         self.failUnlessRaises(EnvironmentError, xattr.remove,
                               item, self.USER_ATTR)
 
-    def testNoXattr(self):
-        """test no attributes"""
+    def testNoXattrDeprecated(self):
+        """test no attributes (deprecated functions)"""
         fh, fname = self._getfile()
         self.failUnlessEqual(xattr.listxattr(fname), [])
         self.failUnlessEqual(xattr.get_all(fname), [])
@@ -114,6 +114,18 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.get_all(dname), [])
         sname = self._getsymlink()
         self.failUnlessEqual(xattr.listxattr(sname, True), [])
+        self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
+
+    def testNoXattr(self):
+        """test no attributes"""
+        fh, fname = self._getfile()
+        self.failUnlessEqual(xattr.list(fname), [])
+        self.failUnlessEqual(xattr.get_all(fname), [])
+        dname = self._getdir()
+        self.failUnlessEqual(xattr.list(dname), [])
+        self.failUnlessEqual(xattr.get_all(dname), [])
+        sname = self._getsymlink()
+        self.failUnlessEqual(xattr.list(sname, nofollow=True), [])
         self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
 
     def testFileByNameDeprecated(self):
@@ -172,9 +184,9 @@ class xattrTest(unittest.TestCase):
         """test mixed access to file"""
         fh, fname = self._getfile()
         fo = os.fdopen(fh)
-        self.failUnlessEqual(xattr.listxattr(fname), [])
+        self.failUnlessEqual(xattr.list(fname), [])
         xattr.set(fname, self.USER_ATTR, self.USER_VAL)
-        self.failUnlessEqual(xattr.listxattr(fh), [self.USER_ATTR])
+        self.failUnlessEqual(xattr.list(fh), [self.USER_ATTR])
         self.failUnlessEqual(xattr.get(fo, self.USER_ATTR),
                              self.USER_VAL)
         self.failUnlessEqual(xattr.get_all(fo),
@@ -201,7 +213,7 @@ class xattrTest(unittest.TestCase):
     def testSymlinkOps(self):
         """test symlink operations"""
         sname = self._getsymlink()
-        self.failUnlessRaises(EnvironmentError, xattr.listxattr, sname)
+        self.failUnlessRaises(EnvironmentError, xattr.list, sname)
         self._checkListSetGet(sname, symlink=True)
 
     def testBinaryPayloadDeprecated(self):
@@ -221,7 +233,7 @@ class xattrTest(unittest.TestCase):
         os.close(fh)
         BINVAL = "abc" + '\0' + "def"
         xattr.set(fname, self.USER_ATTR, BINVAL)
-        self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
+        self.failUnlessEqual(xattr.list(fname), [self.USER_ATTR])
         self.failUnlessEqual(xattr.get(fname, self.USER_ATTR), BINVAL)
         self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
         xattr.remove(fname, self.USER_ATTR)
@@ -246,7 +258,7 @@ class xattrTest(unittest.TestCase):
         xattr.set(fh, self.USER_ATTR, self.USER_VAL)
         VL = [self.USER_ATTR]
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.listxattr(fh), VL)
+            self.failUnlessEqual(xattr.list(fh), VL)
         for i in range(self.MANYOPS_COUNT):
             self.failUnlessEqual(xattr.get(fh, self.USER_ATTR),
                                  self.USER_VAL)
