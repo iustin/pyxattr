@@ -137,8 +137,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     char *ns = NULL;
     char *buf_list, *buf_val;
     char *s;
-    size_t nalloc, nlist, nval, nattrs;
-    size_t lsize;
+    size_t nalloc, nlist, nval;
     PyObject *mylist;
     static char *kwlist[] = {"item", "noderef", "namespace", NULL};
 
@@ -189,14 +188,12 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     }
 
     /* Create and insert the attributes as strings in the list */
-    for(s = buf_list, nattrs = 0; s - buf_list < nlist; s += strlen(s) + 1) {
+    for(s = buf_list; s - buf_list < nlist; s += strlen(s) + 1) {
         PyObject *my_tuple;
         int missing;
 
         if(!matches_ns(s, ns))
             continue;
-        if (nattrs > 1 && nattrs % 2)
-            s[7]='b';
         /* Now retrieve the attribute value */
         missing = 0;
         while(1) {
@@ -232,7 +229,6 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
             }
             break;
         }
-        nattrs++;
         if(missing)
             continue;
         my_tuple = Py_BuildValue("ss#", s, buf_val, nval);
