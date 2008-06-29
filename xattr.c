@@ -1,19 +1,67 @@
 #include <Python.h>
 #include <attr/xattr.h>
 
+typedef enum {T_FD, T_PATH, T_LINK} target_e;
+
+typedef struct {
+    target_e type;
+    union {
+        const char *name;
+        int fd;
+    };
+} target_t;
+
 /** Converts from a string, file or int argument to what we need. */
-static int convertObj(PyObject *myobj, int *ishandle, int *filehandle,
-                      char **filename) {
+static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
+    int fd;
     if(PyString_Check(myobj)) {
-        *ishandle = 0;
-        *filename = PyString_AS_STRING(myobj);
-    } else if((*filehandle = PyObject_AsFileDescriptor(myobj)) != -1) {
-        *ishandle = 1;
+        tgt->type = nofollow ? T_LINK : T_PATH;
+        tgt->name = PyString_AS_STRING(myobj);
+    } else if((fd = PyObject_AsFileDescriptor(myobj)) != -1) {
+        tgt->type = T_FD;
+        tgt->fd = fd;
     } else {
-        PyErr_SetString(PyExc_TypeError, "argument 1 must be string or int");
+        PyErr_SetString(PyExc_TypeError, "argument must be string or int");
         return 0;
     }
     return 1;
+}
+
+static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
+    if(tgt->type == T_FD)
+        return flistxattr(tgt->fd, list, size);
+    else if (tgt->type == T_LINK)
+        return llistxattr(tgt->name, list, size);
+    else
+        return listxattr(tgt->name, list, size);
+}
+
+static ssize_t _get_obj(target_t *tgt, char *name, void *value, size_t size) {
+    if(tgt->type == T_FD)
+        return fgetxattr(tgt->fd, name, value, size);
+    else if (tgt->type == T_LINK)
+        return lgetxattr(tgt->name, name, value, size);
+    else
+        return getxattr(tgt->name, name, value, size);
+}
+
+static ssize_t _set_obj(target_t *tgt, char *name, void *value, size_t size,
+                        int flags) {
+    if(tgt->type == T_FD)
+        return fsetxattr(tgt->fd, name, value, size, flags);
+    else if (tgt->type == T_LINK)
+        return lsetxattr(tgt->name, name, value, size, flags);
+    else
+        return setxattr(tgt->name, name, value, size, flags);
+}
+
+static ssize_t _remove_obj(target_t *tgt, char *name) {
+    if(tgt->type == T_FD)
+        return fremovexattr(tgt->fd, name);
+    else if (tgt->type == T_LINK)
+        return lremovexattr(tgt->name, name);
+    else
+        return removexattr(tgt->name, name);
 }
 
 /* Checks if an attribute name matches an optional namespace */
@@ -51,8 +99,8 @@ static PyObject *
 pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    char *file = NULL;
-    int filedes = -1, ishandle, dolink=0;
+    target_t tgt;
+    int dolink=0;
     char *attrname;
     char *buf;
     int nalloc, nret;
@@ -61,16 +109,11 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
-    if(!convertObj(myarg, &ishandle, &filedes, &file))
+    if(!convertObj(myarg, &tgt, dolink))
         return NULL;
 
     /* Find out the needed size of the buffer */
-    nalloc = ishandle ?
-        fgetxattr(filedes, attrname, NULL, 0) :
-        dolink ?
-        lgetxattr(file, attrname, NULL, 0) :
-        getxattr(file, attrname, NULL, 0);
-    if(nalloc == -1) {
+    if((nalloc = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
@@ -81,12 +124,7 @@ pygetxattr(PyObject *self, PyObject *args)
     }
 
     /* Now retrieve the attribute value */
-    nret = ishandle ?
-        fgetxattr(filedes, attrname, buf, nalloc) :
-        dolink ?
-        lgetxattr(file, attrname, buf, nalloc) :
-        getxattr(file, attrname, buf, nalloc);
-    if(nret == -1) {
+    if((nret = _get_obj(&tgt, attrname, buf, nalloc)) == -1) {
         PyMem_Free(buf);
         return PyErr_SetFromErrno(PyExc_IOError);
     }
@@ -132,30 +170,26 @@ static PyObject *
 get_all(PyObject *self, PyObject *args, PyObject *keywds)
 {
     PyObject *myarg;
-    char *file = NULL;
-    int filedes = -1, ishandle, dolink=0;
+    int dolink=0;
     char *ns = NULL;
     char *buf_list, *buf_val;
     char *s;
     size_t nalloc, nlist, nval;
     PyObject *mylist;
+    target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
                                      &myarg, &dolink, &ns))
         return NULL;
-    if(!convertObj(myarg, &ishandle, &filedes, &file))
+    if(!convertObj(myarg, &tgt, dolink))
         return NULL;
 
     /* Compute first the list of attributes */
 
     /* Find out the needed size of the buffer for the attribute list */
-    nalloc = ishandle ?
-        flistxattr(filedes, NULL, 0) :
-        dolink ?
-        llistxattr(file, NULL, 0) :
-        listxattr(file, NULL, 0);
+    nalloc = _list_obj(&tgt, NULL, 0);
 
     if(nalloc == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
@@ -168,11 +202,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     }
 
     /* Now retrieve the list of attributes */
-    nlist = ishandle ?
-        flistxattr(filedes, buf_list, nalloc) :
-        dolink ?
-        llistxattr(file, buf_list, nalloc) :
-        listxattr(file, buf_list, nalloc);
+    nlist = _list_obj(&tgt, buf_list, nalloc);
 
     if(nlist == -1) {
         PyErr_SetFromErrno(PyExc_IOError);
@@ -197,19 +227,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         /* Now retrieve the attribute value */
         missing = 0;
         while(1) {
-            nval = ishandle ?
-                fgetxattr(filedes, s, buf_val, nalloc) :
-                dolink ?
-                lgetxattr(file, s, buf_val, nalloc) :
-                getxattr(file, s, buf_val, nalloc);
+            nval = _get_obj(&tgt, s, buf_val, nalloc);
 
             if(nval == -1) {
                 if(errno == ERANGE) {
-                    nval = ishandle ?
-                        fgetxattr(filedes, s, NULL, 0) :
-                        dolink ?
-                        lgetxattr(file, s, NULL, 0) :
-                        getxattr(file, s, NULL, 0);
+                    nval = _get_obj(&tgt, s, NULL, 0);
                     if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL)
                         goto free_list;
                     nalloc = nval;
@@ -282,28 +304,22 @@ static PyObject *
 pysetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    char *file;
-    int ishandle, filedes, dolink=0;
+    int dolink=0;
     char *attrname;
     char *buf;
     int bufsize, nret;
     int flags = 0;
+    target_t tgt;
 
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname,
                           &buf, &bufsize, &flags, &dolink))
         return NULL;
-    if(!convertObj(myarg, &ishandle, &filedes, &file))
+    if(!convertObj(myarg, &tgt, dolink))
         return NULL;
 
     /* Set the attribute's value */
-    nret = ishandle ?
-        fsetxattr(filedes, attrname, buf, bufsize, flags) :
-        dolink ?
-        lsetxattr(file, attrname, buf, bufsize, flags) :
-        setxattr(file, attrname, buf, bufsize, flags);
-
-    if(nret == -1) {
+    if((nret = _set_obj(&tgt, attrname, buf, bufsize, flags)) == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
@@ -332,27 +348,22 @@ static PyObject *
 pyremovexattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    char *file;
-    int ishandle, filedes, dolink=0;
+    int dolink=0;
     char *attrname;
     int nret;
+    target_t tgt;
 
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
         return NULL;
 
-    if(!convertObj(myarg, &ishandle, &filedes, &file))
+    if(!convertObj(myarg, &tgt, dolink))
         return NULL;
 
     /* Remove the attribute */
-    nret = ishandle ?
-        fremovexattr(filedes, attrname) :
-        dolink ?
-        lremovexattr(file, attrname) :
-        removexattr(file, attrname);
-
-    if(nret == -1)
+    if((nret = _remove_obj(&tgt, attrname)) == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
+    }
 
     /* Return the result */
     Py_INCREF(Py_None);
@@ -376,30 +387,23 @@ static char __pylistxattr_doc__[] =
 static PyObject *
 pylistxattr(PyObject *self, PyObject *args)
 {
-    char *file = NULL;
-    int filedes = -1;
     char *buf;
-    int ishandle, dolink=0;
+    int dolink=0;
     int nalloc, nret;
     PyObject *myarg;
     PyObject *mylist;
     int nattrs;
     char *s;
+    target_t tgt;
 
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "O|i", &myarg, &dolink))
         return NULL;
-    if(!convertObj(myarg, &ishandle, &filedes, &file))
+    if(!convertObj(myarg, &tgt, dolink))
         return NULL;
 
     /* Find out the needed size of the buffer */
-    nalloc = ishandle ?
-        flistxattr(filedes, NULL, 0) :
-        dolink ?
-        llistxattr(file, NULL, 0) :
-        listxattr(file, NULL, 0);
-
-    if(nalloc == -1) {
+    if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
@@ -410,13 +414,8 @@ pylistxattr(PyObject *self, PyObject *args)
     }
 
     /* Now retrieve the list of attributes */
-    nret = ishandle ?
-        flistxattr(filedes, buf, nalloc) :
-        dolink ?
-        llistxattr(file, buf, nalloc) :
-        listxattr(file, buf, nalloc);
-
-    if(nret == -1) {
+    if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
+        PyMem_Free(buf);
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
