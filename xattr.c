@@ -324,8 +324,7 @@ pysetxattr(PyObject *self, PyObject *args)
     }
 
     /* Return the result */
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char __pyremovexattr_doc__[] =
@@ -366,8 +365,7 @@ pyremovexattr(PyObject *self, PyObject *args)
     }
 
     /* Return the result */
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char __pylistxattr_doc__[] =
