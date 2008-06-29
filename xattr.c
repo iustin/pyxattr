@@ -100,16 +100,16 @@ pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     target_t tgt;
-    int dolink=0;
+    int nofollow=0;
     char *attrname;
     char *buf;
     int nalloc, nret;
     PyObject *res;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
+    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, dolink))
+    if(!convertObj(myarg, &tgt, nofollow))
         return NULL;
 
     /* Find out the needed size of the buffer */
@@ -304,7 +304,7 @@ static PyObject *
 pysetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    int dolink=0;
+    int nofollow=0;
     char *attrname;
     char *buf;
     int bufsize, nret;
@@ -313,9 +313,9 @@ pysetxattr(PyObject *self, PyObject *args)
 
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname,
-                          &buf, &bufsize, &flags, &dolink))
+                          &buf, &bufsize, &flags, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, dolink))
+    if(!convertObj(myarg, &tgt, nofollow))
         return NULL;
 
     /* Set the attribute's value */
@@ -348,16 +348,16 @@ static PyObject *
 pyremovexattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
-    int dolink=0;
+    int nofollow=0;
     char *attrname;
     int nret;
     target_t tgt;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &dolink))
+    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &nofollow))
         return NULL;
 
-    if(!convertObj(myarg, &tgt, dolink))
+    if(!convertObj(myarg, &tgt, nofollow))
         return NULL;
 
     /* Remove the attribute */
@@ -388,7 +388,7 @@ static PyObject *
 pylistxattr(PyObject *self, PyObject *args)
 {
     char *buf;
-    int dolink=0;
+    int nofollow=0;
     int nalloc, nret;
     PyObject *myarg;
     PyObject *mylist;
@@ -397,9 +397,9 @@ pylistxattr(PyObject *self, PyObject *args)
     target_t tgt;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "O|i", &myarg, &dolink))
+    if (!PyArg_ParseTuple(args, "O|i", &myarg, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, dolink))
+    if(!convertObj(myarg, &tgt, nofollow))
         return NULL;
 
     /* Find out the needed size of the buffer */
