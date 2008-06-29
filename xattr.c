@@ -16,6 +16,19 @@ static int convertObj(PyObject *myobj, int *ishandle, int *filehandle,
     return 1;
 }
 
+/* Checks if an attribute name matches an optional namespace */
+static int matches_ns(const char *name, const char *ns) {
+    size_t ns_size;
+    if (ns == NULL)
+        return 1;
+    ns_size = strlen(ns);
+
+    if (strlen(name) > ns_size && !strncmp(name, ns, ns_size) &&
+        name[ns_size] == '.')
+        return 1;
+    return 0;
+}
+
 /* Wrapper for getxattr */
 static char __pygetxattr_doc__[] =
     "Get the value of a given extended attribute.\n"
@@ -85,6 +98,134 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Return the result */
     return res;
 }
+
+/* Wrapper for getxattr */
+static char __get_all_doc__[] =
+    "Get all the extended attributes of an item.\n"
+    "\n"
+    "Parameters:\n"
+    "  - a string representing filename, or a file-like object,\n"
+    "    or a file descriptor; this represents the file on \n"
+    "    which to act\n"
+    "  - (optional) a boolean value (defaults to false), which, if\n"
+    "    the file name given is a symbolic link, makes the\n"
+    "    function operate on the symbolic link itself instead\n"
+    "    of its target;"
+    ;
+
+static PyObject *
+get_all(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    PyObject *myarg;
+    char *file = NULL;
+    int filedes = -1, ishandle, dolink=0;
+    char *ns = NULL;
+    char *buf_list, *buf_val;
+    char *s;
+    int nalloc, nlist, nval, nattrs;
+    PyObject *mylist;
+    static char *kwlist[] = {"item", "noderef", "namespace", NULL};
+
+    /* Parse the arguments */
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
+                                     &myarg, &dolink, &ns))
+        return NULL;
+    if(!convertObj(myarg, &ishandle, &filedes, &file))
+        return NULL;
+
+    /* Compute first the list of attributes */
+
+    /* Find out the needed size of the buffer for the attribute list */
+    nalloc = ishandle ?
+        flistxattr(filedes, NULL, 0) :
+        dolink ?
+        llistxattr(file, NULL, 0) :
+        listxattr(file, NULL, 0);
+
+    if(nalloc == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Try to allocate the memory, using Python's allocator */
+    if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    /* Now retrieve the list of attributes */
+    nlist = ishandle ?
+        flistxattr(filedes, buf_list, nalloc) :
+        dolink ?
+        llistxattr(file, buf_list, nalloc) :
+        listxattr(file, buf_list, nalloc);
+
+    if(nlist == -1) {
+        return PyErr_SetFromErrno(PyExc_IOError);
+    }
+
+    /* Compute the number of attributes in the list */
+    for(s = buf_list, nattrs = 0; (s - buf_list) < nlist; s += strlen(s) + 1) {
+        if(matches_ns(s, ns))
+            nattrs++;
+    }
+
+    /* Create the list which will hold the result */
+    mylist = PyList_New(nattrs);
+
+    /* Create and insert the attributes as strings in the list */
+    for(s = buf_list, nattrs = 0; s - buf_list < nlist; s += strlen(s) + 1) {
+        PyObject *my_tuple;
+
+        if(!matches_ns(s, ns))
+            continue;
+
+        /* Find out the needed size of the value buffer */
+        nalloc = ishandle ?
+            fgetxattr(filedes, s, NULL, 0) :
+            dolink ?
+            lgetxattr(file, s, NULL, 0) :
+            getxattr(file, s, NULL, 0);
+        if(nalloc == -1) {
+            PyMem_Free(buf_list);
+            return PyErr_SetFromErrno(PyExc_IOError);
+        }
+
+        /* Try to allocate the memory, using Python's allocator */
+        if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
+            PyMem_Free(buf_list);
+            PyErr_NoMemory();
+            return NULL;
+        }
+
+        /* Now retrieve the attribute value */
+        nval = ishandle ?
+            fgetxattr(filedes, s, buf_val, nalloc) :
+            dolink ?
+            lgetxattr(file, s, buf_val, nalloc) :
+            getxattr(file, s, buf_val, nalloc);
+
+        if(nval == -1) {
+            PyMem_Free(buf_list);
+            PyMem_Free(buf_val);
+            return PyErr_SetFromErrno(PyExc_IOError);
+        }
+        my_tuple = Py_BuildValue("ss#", s, buf_val, nval);
+
+        /* Free the buffer, now it is no longer needed */
+        PyMem_Free(buf_val);
+
+        PyList_SET_ITEM(mylist, nattrs, my_tuple);
+        nattrs++;
+    }
+
+    /* Free the buffer, now it is no longer needed */
+    PyMem_Free(buf_list);
+
+    /* Return the result */
+    return mylist;
+
+}
+
 
 static char __pysetxattr_doc__[] =
     "Set the value of a given extended attribute.\n"
@@ -279,6 +420,8 @@ pylistxattr(PyObject *self, PyObject *args)
 
 static PyMethodDef xattr_methods[] = {
     {"getxattr",  pygetxattr, METH_VARARGS, __pygetxattr_doc__ },
+    {"get_all", (PyCFunction) get_all, METH_VARARGS | METH_KEYWORDS,
+     __get_all_doc__ },
     {"setxattr",  pysetxattr, METH_VARARGS, __pysetxattr_doc__ },
     {"removexattr",  pyremovexattr, METH_VARARGS, __pyremovexattr_doc__ },
     {"listxattr",  pylistxattr, METH_VARARGS, __pylistxattr_doc__ },
