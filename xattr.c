@@ -317,4 +317,10 @@ initxattr(void)
     PyModule_AddIntConstant(m, "XATTR_CREATE", XATTR_CREATE);
     PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
 
+    /* namespace constants */
+    PyModule_AddStringConstant(m, "NS_SECURITY", "security");
+    PyModule_AddStringConstant(m, "NS_SYSTEM", "system");
+    PyModule_AddStringConstant(m, "NS_TRUSTED", "trusted");
+    PyModule_AddStringConstant(m, "NS_USER", "user");
+
 }
