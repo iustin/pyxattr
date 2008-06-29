@@ -253,6 +253,7 @@ pylistxattr(PyObject *self, PyObject *args)
         listxattr(file, buf, nalloc);
 
     if(nret == -1) {
+        PyMem_Free(buf);
         return PyErr_SetFromErrno(PyExc_IOError);
     }
 
