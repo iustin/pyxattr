@@ -120,11 +120,11 @@ static char __get_all_doc__[] =
     " attributes; for example, querying all user attributes can be"
     " accomplished by passing namespace=L{NS_USER}\n"
     "@type namespace: string\n"
-    "@keyword noderef: if passed and true, if the target file is a symbolic"
+    "@keyword nofollow: if passed and true, if the target file is a symbolic"
     " link,"
     " the attributes for the link itself will be returned, instead of the"
     " attributes of the target\n"
-    "@type noderef: boolean\n"
+    "@type nofollow: boolean\n"
     "@return: list of tuples (name, value)\n"
     ;
 
@@ -139,7 +139,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     char *s;
     size_t nalloc, nlist, nval;
     PyObject *mylist;
-    static char *kwlist[] = {"item", "noderef", "namespace", NULL};
+    static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
