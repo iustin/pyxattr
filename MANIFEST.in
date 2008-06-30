@@ -1,5 +1,7 @@
-include setup.cfg
-include README
-include xattr.c
+include COPYING
 include NEWS
-include COPYING.LGPL-3
+include README
+include epydoc.conf
+include setup.cfg
+include test/test_xattr.py
+include xattr.c
