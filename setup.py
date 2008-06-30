@@ -13,6 +13,7 @@ author_email = "iusty@k1024.org"
 macros = [
     ("_XATTR_VERSION", '"%s"' % version),
     ("_XATTR_AUTHOR", '"%s"' % author),
+    ("_XATTR_EMAIL", '"%s"' % author_email),
     ]
 setup(name = "pyxattr",
       version = version,

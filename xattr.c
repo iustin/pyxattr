@@ -189,6 +189,12 @@ pygetxattr(PyObject *self, PyObject *args)
 static char __get_doc__[] =
     "Get the value of a given extended attribute.\n"
     "\n"
+    "Example\n"
+    "    >>> xattr.get('/path/to/file', 'user.comment')\n"
+    "    'test'\n"
+    "    >>> xattr.get('/path/to/file', 'comment', namespace=xattr.NS_USER)\n"
+    "    'test'\n"
+    "\n"
     "@param item: the item to query; either a string representing the\n"
     "    filename, or a file-like object, or a file descriptor\n"
     "@param name: the attribute whose value to set; usually in form of\n"
@@ -466,6 +472,11 @@ pysetxattr(PyObject *self, PyObject *args)
 static char __set_doc__[] =
     "Set the value of a given extended attribute.\n"
     "\n"
+    "Example:\n"
+    "    >>> xattr.set('/path/to/file', 'user.comment', 'test')\n"
+    "    >>> xattr.set('/path/to/file', 'comment', 'test',"
+    " namespace=xattr.NS_USER)\n"
+    "\n"
     "@param item: the item to query; either a string representing the\n"
     "    filename, or a file-like object, or a file descriptor\n"
     "@param name: the attribute whose value to set; usually in form of\n"
@@ -580,6 +591,9 @@ pyremovexattr(PyObject *self, PyObject *args)
 
 static char __remove_doc__[] =
     "Remove an attribute from a file\n"
+    "\n"
+    "Example:\n"
+    "    >>> xattr.remove('/path/to/file', 'user.comment')\n"
     "\n"
     "@param item: the item to query; either a string representing the\n"
     "    filename, or a file-like object, or a file descriptor\n"
@@ -866,6 +880,7 @@ initxattr(void)
     PyObject *m = Py_InitModule3("xattr", xattr_methods, __xattr_doc__);
 
     PyModule_AddStringConstant(m, "__author__", _XATTR_AUTHOR);
+    PyModule_AddStringConstant(m, "__contact__", _XATTR_EMAIL);
     PyModule_AddStringConstant(m, "__version__", _XATTR_VERSION);
     PyModule_AddStringConstant(m, "__docformat__", "epytext en");
 
