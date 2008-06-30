@@ -189,7 +189,7 @@ pygetxattr(PyObject *self, PyObject *args)
 static char __get_doc__[] =
     "Get the value of a given extended attribute.\n"
     "\n"
-    "Example\n"
+    "Example:\n"
     "    >>> xattr.get('/path/to/file', 'user.comment')\n"
     "    'test'\n"
     "    >>> xattr.get('/path/to/file', 'comment', namespace=xattr.NS_USER)\n"
@@ -413,6 +413,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
 static char __pysetxattr_doc__[] =
     "Set the value of a given extended attribute (deprecated).\n"
+    "\n"
     "Be carefull in case you want to set attributes on symbolic\n"
     "links, you have to use all the 5 parameters; use 0 for the \n"
     "flags value if you want the default behavior (create or "
@@ -546,7 +547,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static char __pyremovexattr_doc__[] =
-    "Remove an attribute from a file (deprecated)\n"
+    "Remove an attribute from a file (deprecated).\n"
     "\n"
     "Parameters:\n"
     "  - a string representing filename, or a file-like object,\n"
@@ -590,7 +591,7 @@ pyremovexattr(PyObject *self, PyObject *args)
 }
 
 static char __remove_doc__[] =
-    "Remove an attribute from a file\n"
+    "Remove an attribute from a file.\n"
     "\n"
     "Example:\n"
     "    >>> xattr.remove('/path/to/file', 'user.comment')\n"
@@ -649,7 +650,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static char __pylistxattr_doc__[] =
-    "Return the list of attribute names for a file (deprecated)\n"
+    "Return the list of attribute names for a file (deprecated).\n"
     "\n"
     "Parameters:\n"
     "  - a string representing filename, or a file-like object,\n"
@@ -722,7 +723,7 @@ pylistxattr(PyObject *self, PyObject *args)
 }
 
 static char __list_doc__[] =
-    "Return the list of attribute names for a file\n"
+    "Return the list of attribute names for a file.\n"
     "\n"
     "Example:\n"
     "    >>> xattr.list('/path/to/file')\n"
@@ -830,7 +831,7 @@ static PyMethodDef xattr_methods[] = {
 };
 
 static char __xattr_doc__[] = \
-    "Access extended filesystem attributes\n"
+    "Interface to extended filesystem attributes.\n"
     "\n"
     "This module gives access to the extended attributes present\n"
     "in some operating systems/filesystems. You can list attributes,\n"
