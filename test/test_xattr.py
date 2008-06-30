@@ -26,9 +26,15 @@ class xattrTest(unittest.TestCase):
     def tearDown(self):
         """tear down function"""
         for fname in self.rmfiles:
-            os.unlink(fname)
+            try:
+                os.unlink(fname)
+            except EnvironmentError:
+                continue
         for dname in self.rmdirs:
-            os.rmdir(dname)
+            try:
+                os.rmdir(dname)
+            except EnvironmentError:
+                continue
 
     def _getfile(self):
         """create a temp file"""
@@ -42,13 +48,16 @@ class xattrTest(unittest.TestCase):
         self.rmdirs.append(dname)
         return dname
 
-    def _getsymlink(self):
+    def _getsymlink(self, dangling=True):
         """create a symlink"""
         fh, fname = self._getfile()
         os.close(fh)
-        os.unlink(fname)
-        os.symlink(fname + ".non-existent", fname)
-        return fname
+        if dangling:
+            os.unlink(fname)
+        sname = fname + ".symlink"
+        os.symlink(fname, sname)
+        self.rmfiles.append(sname)
+        return fname, sname
 
     def _checkDeprecated(self, item, symlink=False):
         """check deprecated list, set, get operations against an item"""
@@ -144,7 +153,7 @@ class xattrTest(unittest.TestCase):
         dname = self._getdir()
         self.failUnlessEqual(xattr.listxattr(dname), [])
         self.failUnlessEqual(xattr.get_all(dname), [])
-        sname = self._getsymlink()
+        _, sname = self._getsymlink()
         self.failUnlessEqual(xattr.listxattr(sname, True), [])
         self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
 
@@ -160,7 +169,7 @@ class xattrTest(unittest.TestCase):
         self.failUnlessEqual(xattr.list(dname, namespace=NS_USER), [])
         self.failUnlessEqual(xattr.get_all(dname), [])
         self.failUnlessEqual(xattr.get_all(dname, namespace=NS_USER), [])
-        sname = self._getsymlink()
+        _, sname = self._getsymlink()
         self.failUnlessEqual(xattr.list(sname, nofollow=True), [])
         self.failUnlessEqual(xattr.list(sname, nofollow=True,
                                         namespace=NS_USER), [])
@@ -258,16 +267,30 @@ class xattrTest(unittest.TestCase):
 
     def testSymlinkOpsDeprecated(self):
         """test symlink operations (deprecated functions)"""
-        sname = self._getsymlink()
+        _, sname = self._getsymlink()
         self.failUnlessRaises(EnvironmentError, xattr.listxattr, sname)
         self._checkDeprecated(sname, symlink=True)
+        target, sname = self._getsymlink(dangling=False)
+        xattr.setxattr(target, self.USER_ATTR, self.USER_VAL)
+        self.failUnlessEqual(xattr.listxattr(target), [self.USER_ATTR])
+        self.failUnlessEqual(xattr.listxattr(sname, True), [])
+        self.failUnlessRaises(EnvironmentError, xattr.removexattr, sname,
+                              self.USER_ATTR, True)
+        xattr.removexattr(sname, self.USER_ATTR, False)
 
     def testSymlinkOps(self):
         """test symlink operations"""
-        sname = self._getsymlink()
+        _, sname = self._getsymlink()
         self.failUnlessRaises(EnvironmentError, xattr.list, sname)
         self._checkListSetGet(sname, symlink=True)
         self._checkListSetGet(sname, symlink=True, use_ns=True)
+        target, sname = self._getsymlink(dangling=False)
+        xattr.set(target, self.USER_ATTR, self.USER_VAL)
+        self.failUnlessEqual(xattr.list(target), [self.USER_ATTR])
+        self.failUnlessEqual(xattr.list(sname, nofollow=True), [])
+        self.failUnlessRaises(EnvironmentError, xattr.remove, sname,
+                              self.USER_ATTR, nofollow=True)
+        xattr.remove(sname, self.USER_ATTR, nofollow=False)
 
     def testBinaryPayloadDeprecated(self):
         """test binary values (deprecated functions)"""
