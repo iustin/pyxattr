@@ -1,19 +1,49 @@
-v0.3.0
-------
+Version 0.4
+===========
 
- * change licence from GPL to LGPL (3 or later)
- * change listxattr return type from tuple to a list
- * developer-related: add unittests
+API
+---
 
-v0.2.2
-------
+The old functions ({get,set,list,remove}xattr) are deprecated and replaced with
+a new API that is namespace-aware and hopefully will allow other OSes (e.g.
+FreeBSD) to be supported more naturally.
 
- * fix listing symlink xattrs
+Both the old and the new API are supported in the 0.4 versions, however users
+are encouraged to migrate to the new API.
 
-News in 0.2.1
--------------
+New features
+------------
 
- * fixed a bug when reading symlink EAs (you weren't able to
-   do it, actually)
- * fix a possible memory leak when the actual read of the EA
-   failed but the call to get the length of the EA didn't
+A new bulk get function called get_all() has been added that should be somewhat
+faster in case of querying files which have many attributes.
+
+License
+-------
+
+Since LGPLv3 is not compatible with GPLv2 (which unfortunately I didn't realize
+before), the license was changed to LGPLv2.1 or later.
+
+Internals
+---------
+
+Unittest coverage was improved.
+
+Version 0.3
+===========
+
+* changed licence from GPL to LGPL (3 or later)
+* changed listxattr return type from tuple to a list
+* developer-related: added unittests
+
+Version 0.2.2
+=============
+
+* fixed listing symlink xattrs
+
+Version 0.2.1
+=============
+
+* fixed a bug when reading symlink EAs (you weren't able to
+  do it, actually)
+* fixed a possible memory leak when the actual read of the EA
+  failed but the call to get the length of the EA didn't

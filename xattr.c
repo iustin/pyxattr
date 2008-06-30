@@ -882,6 +882,8 @@ initxattr(void)
     PyModule_AddStringConstant(m, "__author__", _XATTR_AUTHOR);
     PyModule_AddStringConstant(m, "__contact__", _XATTR_EMAIL);
     PyModule_AddStringConstant(m, "__version__", _XATTR_VERSION);
+    PyModule_AddStringConstant(m, "__license__",
+                               "GNU Lesser General Public License (LGPL)");
     PyModule_AddStringConstant(m, "__docformat__", "epytext en");
 
     PyModule_AddIntConstant(m, "XATTR_CREATE", XATTR_CREATE);
