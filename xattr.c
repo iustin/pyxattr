@@ -1,3 +1,4 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <attr/xattr.h>
 #include <stdio.h>
@@ -5,6 +6,13 @@
 /* the estimated (startup) attribute buffer size in
    multi-operations */
 #define ESTIMATE_ATTR_SIZE 256
+
+/* Compatibility with python 2.4 regarding python size type (PEP 353) */
+#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
+typedef int Py_ssize_t;
+#define PY_SSIZE_T_MAX INT_MAX
+#define PY_SSIZE_T_MIN INT_MIN
+#endif
 
 typedef enum {T_FD, T_PATH, T_LINK} target_e;
 
@@ -75,8 +83,8 @@ static ssize_t _get_obj(target_t *tgt, const char *name, void *value,
         return getxattr(tgt->name, name, value, size);
 }
 
-static ssize_t _set_obj(target_t *tgt, const char *name,
-                        const void *value, size_t size,
+static int _set_obj(target_t *tgt, const char *name,
+                    const void *value, size_t size,
                         int flags) {
     if(tgt->type == T_FD)
         return fsetxattr(tgt->fd, name, value, size, flags);
@@ -86,7 +94,7 @@ static ssize_t _set_obj(target_t *tgt, const char *name,
         return setxattr(tgt->name, name, value, size, flags);
 }
 
-static ssize_t _remove_obj(target_t *tgt, const char *name) {
+static int _remove_obj(target_t *tgt, const char *name) {
     if(tgt->type == T_FD)
         return fremovexattr(tgt->fd, name);
     else if (tgt->type == T_LINK)
@@ -141,7 +149,7 @@ pygetxattr(PyObject *self, PyObject *args)
     int nofollow=0;
     char *attrname;
     char *buf;
-    int nalloc, nret;
+    ssize_t nalloc, nret;
     PyObject *res;
 
     /* Parse the arguments */
@@ -426,7 +434,8 @@ pysetxattr(PyObject *self, PyObject *args)
     int nofollow=0;
     char *attrname;
     char *buf;
-    int bufsize, nret;
+    Py_ssize_t bufsize;
+    int nret;
     int flags = 0;
     target_t tgt;
 
@@ -634,10 +643,10 @@ pylistxattr(PyObject *self, PyObject *args)
 {
     char *buf;
     int nofollow=0;
-    int nalloc, nret;
+    ssize_t nalloc, nret;
     PyObject *myarg;
     PyObject *mylist;
-    int nattrs;
+    Py_ssize_t nattrs;
     char *s;
     target_t tgt;
 
