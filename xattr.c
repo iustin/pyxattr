@@ -84,8 +84,7 @@ static ssize_t _get_obj(target_t *tgt, const char *name, void *value,
 }
 
 static int _set_obj(target_t *tgt, const char *name,
-                    const void *value, size_t size,
-                        int flags) {
+                    const void *value, size_t size, int flags) {
     if(tgt->type == T_FD)
         return fsetxattr(tgt->fd, name, value, size, flags);
     else if (tgt->type == T_LINK)
@@ -217,7 +216,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     const char *fullname;
     char *buf;
     char *ns = NULL;
-    int nalloc, nret;
+    ssize_t nalloc, nret;
     PyObject *res;
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
@@ -493,7 +492,8 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     int nofollow=0;
     char *attrname;
     char *buf;
-    int bufsize, nret;
+    Py_ssize_t bufsize;
+    int nret;
     int flags = 0;
     target_t tgt;
     char *ns = NULL;
@@ -725,11 +725,11 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 {
     char *buf;
     int nofollow=0;
-    int nalloc, nret;
+    ssize_t nalloc, nret;
     PyObject *myarg;
     PyObject *mylist;
     char *ns = NULL;
-    int nattrs;
+    Py_ssize_t nattrs;
     char *s;
     target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
