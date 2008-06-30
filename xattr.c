@@ -3,16 +3,16 @@
 #include <attr/xattr.h>
 #include <stdio.h>
 
-/* the estimated (startup) attribute buffer size in
-   multi-operations */
-#define ESTIMATE_ATTR_SIZE 256
-
 /* Compatibility with python 2.4 regarding python size type (PEP 353) */
 #if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
 typedef int Py_ssize_t;
 #define PY_SSIZE_T_MAX INT_MAX
 #define PY_SSIZE_T_MIN INT_MIN
 #endif
+
+/* the estimated (startup) attribute buffer size in
+   multi-operations */
+#define ESTIMATE_ATTR_SIZE 256
 
 typedef enum {T_FD, T_PATH, T_LINK} target_e;
 
