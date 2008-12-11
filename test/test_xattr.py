@@ -354,3 +354,6 @@ class xattrTest(unittest.TestCase):
                                  [(self.USER_ATTR, self.USER_VAL)])
             self.failUnlessEqual(xattr.get_all(fh, namespace=NS_USER),
                                  [(self.USER_NN, self.USER_VAL)])
+
+if __name__ == "__main__":
+    unittest.main()
