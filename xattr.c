@@ -32,6 +32,15 @@ typedef int Py_ssize_t;
 #define PY_SSIZE_T_MIN INT_MIN
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#else
+#define PyBytes_Check PyString_Check
+#define PyBytes_AS_STRING PyString_AS_STRING
+#define PyBytes_FromStringAndSize PyString_FromStringAndSize
+#define PyBytes_FromString PyString_FromString
+#endif
+
 /* the estimated (startup) attribute buffer size in
    multi-operations */
 #define ESTIMATE_ATTR_SIZE 256
@@ -897,10 +906,34 @@ static char __xattr_doc__[] = \
     "    removexattr\n"
     ;
 
+#ifdef IS_PY3K
+
+static struct PyModuleDef xattrmodule = {
+    PyModuleDef_HEAD_INIT,
+    "xattr",
+    __xattr_doc__,
+    0,
+    xattr_methods,
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit_xattr(void)
+
+#else
+#define INITERROR return
 void
 initxattr(void)
+#endif
 {
+#ifdef IS_PY3K
+    PyObject *m = PyModule_Create(&xattrmodule);
+#else
     PyObject *m = Py_InitModule3("xattr", xattr_methods, __xattr_doc__);
+#endif
+    if (m==NULL)
+        INITERROR;
 
     PyModule_AddStringConstant(m, "__author__", _XATTR_AUTHOR);
     PyModule_AddStringConstant(m, "__contact__", _XATTR_EMAIL);
@@ -913,9 +946,12 @@ initxattr(void)
     PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
 
     /* namespace constants */
-    PyModule_AddStringConstant(m, "NS_SECURITY", "security");
-    PyModule_AddStringConstant(m, "NS_SYSTEM", "system");
-    PyModule_AddStringConstant(m, "NS_TRUSTED", "trusted");
-    PyModule_AddStringConstant(m, "NS_USER", "user");
+    PyModule_AddObject(m, "NS_SECURITY", PyBytes_FromString("security"));
+    PyModule_AddObject(m, "NS_SYSTEM", PyBytes_FromString("system"));
+    PyModule_AddObject(m, "NS_TRUSTED", PyBytes_FromString("trusted"));
+    PyModule_AddObject(m, "NS_USER", PyBytes_FromString("user"));
 
+#ifdef IS_PY3K
+    return m;
+#endif
 }
