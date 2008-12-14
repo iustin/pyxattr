@@ -66,9 +66,18 @@ static void free_tgt(target_t *tgt) {
 /** Converts from a string, file or int argument to what we need. */
 static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
     int fd;
-    if(PyString_Check(myobj)) {
+    tgt->tmp = NULL;
+    if(PyBytes_Check(myobj)) {
         tgt->type = nofollow ? T_LINK : T_PATH;
-        tgt->name = PyString_AS_STRING(myobj);
+        tgt->name = PyBytes_AS_STRING(myobj);
+    } else if(PyUnicode_Check(myobj)) {
+        tgt->type = nofollow ? T_LINK : T_PATH;
+        tgt->tmp = \
+            PyUnicode_AsEncodedString(myobj,
+                                      Py_FileSystemDefaultEncoding, "strict");
+        if(tgt->tmp == NULL)
+            return 0;
+        tgt->name = PyBytes_AS_STRING(tgt->tmp);
     } else if((fd = PyObject_AsFileDescriptor(myobj)) != -1) {
         tgt->type = T_FD;
         tgt->fd = fd;
@@ -192,33 +201,42 @@ pygetxattr(PyObject *self, PyObject *args)
     PyObject *res;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &nofollow))
+    if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
+    }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        res = NULL;
+        goto freetgt;
     }
 
     /* Now retrieve the attribute value */
     if((nret = _get_obj(&tgt, attrname, buf, nalloc)) == -1) {
-        PyMem_Free(buf);
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freebuf;
     }
 
     /* Create the string which will hold the result */
-    res = PyString_FromStringAndSize(buf, nret);
+    res = PyBytes_FromStringAndSize(buf, nret);
 
+ freebuf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
+ freetgt:
+    free_tgt(&tgt);
+ freearg:
+    PyMem_Free(attrname);
 
     /* Return the result */
     return res;
@@ -268,39 +286,47 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|iz", kwlist,
-                                     &myarg, &attrname, &nofollow, &ns))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iz", kwlist,
+                                     &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
+    }
 
     fullname = merge_ns(ns, attrname, &namebuf);
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        PyMem_Free(namebuf);
         PyErr_NoMemory();
-        return NULL;
+        res = NULL;
+        goto freenamebuf;
     }
 
     /* Now retrieve the attribute value */
     if((nret = _get_obj(&tgt, fullname, buf, nalloc)) == -1) {
-        PyMem_Free(buf);
-        PyMem_Free(namebuf);
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freebuf;
     }
 
     /* Create the string which will hold the result */
-    res = PyString_FromStringAndSize(buf, nret);
+    res = PyBytes_FromStringAndSize(buf, nret);
 
     /* Free the buffers, they are no longer needed */
-    PyMem_Free(namebuf);
+ freebuf:
     PyMem_Free(buf);
+ freenamebuf:
+    PyMem_Free(namebuf);
+ freetgt:
+    free_tgt(&tgt);
+ freearg:
+    PyMem_Free(attrname);
 
     /* Return the result */
     return res;
@@ -370,20 +396,22 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     nalloc = _list_obj(&tgt, NULL, 0);
 
     if(nalloc == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        res = NULL;
+        goto freetgt;
     }
 
     /* Now retrieve the list of attributes */
     nlist = _list_obj(&tgt, buf_list, nalloc);
 
     if(nlist == -1) {
-        PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
         goto free_buf_list;
     }
 
@@ -392,7 +420,9 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     nalloc = ESTIMATE_ATTR_SIZE;
     if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
-        goto free_list;
+        Py_DECREF(mylist);
+        res = NULL;
+        goto free_buf_list;
     }
 
     /* Create and insert the attributes as strings in the list */
@@ -411,8 +441,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
             if(nval == -1) {
                 if(errno == ERANGE) {
                     nval = _get_obj(&tgt, s, NULL, 0);
-                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL)
-                        goto free_list;
+                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL) {
+                        res = NULL;
+                        Py_DECREF(mylist);
+                        goto free_buf_list;
+                    }
                     nalloc = nval;
                     continue;
                 } else if(errno == ENODATA || errno == ENOATTR) {
@@ -421,32 +454,37 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                     missing = 1;
                     break;
                 }
-                goto exit_errno;
+                res = PyErr_SetFromErrno(PyExc_IOError);
+                goto freebufval;
             }
             break;
         }
         if(missing)
             continue;
+#ifdef IS_PY3K
+        my_tuple = Py_BuildValue("yy#", name, buf_val, nval);
+#else
         my_tuple = Py_BuildValue("ss#", name, buf_val, nval);
+#endif
 
         PyList_Append(mylist, my_tuple);
         Py_DECREF(my_tuple);
     }
 
-    /* Free the buffers, now they are no longer needed */
-    PyMem_Free(buf_val);
-    PyMem_Free(buf_list);
+    /* Successfull exit */
+    res = mylist;
 
-    /* Return the result */
-    return mylist;
- exit_errno:
-    PyErr_SetFromErrno(PyExc_IOError);
+ freebufval:
     PyMem_Free(buf_val);
- free_list:
-    Py_DECREF(mylist);
+
  free_buf_list:
     PyMem_Free(buf_list);
-    return NULL;
+
+ freetgt:
+    free_tgt(&tgt);
+
+    /* Return the result */
+    return res;
 }
 
 
@@ -494,19 +532,33 @@ pysetxattr(PyObject *self, PyObject *args)
     target_t tgt;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Oss#|bi", &myarg, &attrname,
-                          &buf, &bufsize, &flags, &nofollow))
+    if (!PyArg_ParseTuple(args, "Oetet#|bi", &myarg, NULL, &attrname,
+                          NULL, &buf, &bufsize, &flags, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
-
-    /* Set the attribute's value */
-    if((nret = _set_obj(&tgt, attrname, buf, bufsize, flags)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
     }
 
+    /* Set the attribute's value */
+    nret = _set_obj(&tgt, attrname, buf, bufsize, flags);
+
+    free_tgt(&tgt);
+
+    if(nret == -1) {
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freearg;
+    }
+
+    Py_INCREF(Py_None);
+    res = Py_None;
+
+ freearg:
+    PyMem_Free(attrname);
+    PyMem_Free(buf);
+
     /* Return the result */
-    Py_RETURN_NONE;
+    return res;
 }
 
 static char __set_doc__[] =
@@ -564,24 +616,39 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
                              "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oss#|iiz", kwlist,
-                                     &myarg, &attrname,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|iiz", kwlist,
+                                     &myarg, NULL, &attrname, NULL,
                                      &buf, &bufsize, &flags, &nofollow, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
-
-    full_name = merge_ns(ns, attrname, &newname);
-    /* Set the attribute's value */
-    nret = _set_obj(&tgt, full_name, buf, bufsize, flags);
-    if(newname != NULL)
-        PyMem_Free(newname);
-    if(nret == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
     }
 
+    full_name = merge_ns(ns, attrname, &newname);
+
+    /* Set the attribute's value */
+    nret = _set_obj(&tgt, full_name, buf, bufsize, flags);
+
+    if(newname != NULL)
+        PyMem_Free(newname);
+
+    free_tgt(&tgt);
+
+    if(nret == -1) {
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freearg;
+    }
+
+    Py_INCREF(Py_None);
+    res = Py_None;
+
+ freearg:
+    PyMem_Free(attrname);
+    PyMem_Free(buf);
+
     /* Return the result */
-    Py_RETURN_NONE;
+    return res;
 }
 
 
@@ -614,19 +681,32 @@ pyremovexattr(PyObject *self, PyObject *args)
     target_t tgt;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Os|i", &myarg, &attrname, &nofollow))
+    if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
 
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
-
-    /* Remove the attribute */
-    if((nret = _remove_obj(&tgt, attrname)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
     }
 
+    /* Remove the attribute */
+    nret = _remove_obj(&tgt, attrname);
+
+    free_tgt(&tgt);
+
+    if(nret == -1) {
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freearg;
+    }
+
+    Py_INCREF(Py_None);
+    res = Py_None;
+
+ freearg:
+    PyMem_Free(attrname);
+
     /* Return the result */
-    Py_RETURN_NONE;
+    return res;
 }
 
 static char __remove_doc__[] =
@@ -667,25 +747,41 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|iz", kwlist,
-                                     &myarg, &attrname, &nofollow, &ns))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iz", kwlist,
+                                     &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
 
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
+    }
+
     full_name = merge_ns(ns, attrname, &name_buf);
-    if(full_name == NULL)
-        return NULL;
+    if(full_name == NULL) {
+        res = NULL;
+        goto freearg;
+    }
 
     /* Remove the attribute */
     nret = _remove_obj(&tgt, full_name);
+
     PyMem_Free(name_buf);
+
+    free_tgt(&tgt);
+
     if(nret == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freearg;
     }
 
+    Py_INCREF(Py_None);
+    res = Py_None;
+
+ freearg:
+    PyMem_Free(attrname);
+
     /* Return the result */
-    Py_RETURN_NONE;
+    return res;
 }
 
 static char __pylistxattr_doc__[] =
@@ -725,19 +821,21 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Find out the needed size of the buffer */
     if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        mylist = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        mylist = NULL;
+        goto freetgt;
     }
 
     /* Now retrieve the list of attributes */
     if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
-        PyMem_Free(buf);
-        return PyErr_SetFromErrno(PyExc_IOError);
+        mylist = PyErr_SetFromErrno(PyExc_IOError);
+        goto freebuf;
     }
 
     /* Compute the number of attributes in the list */
@@ -750,12 +848,16 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
-        PyList_SET_ITEM(mylist, nattrs, PyString_FromString(s));
+        PyList_SET_ITEM(mylist, nattrs, PyBytes_FromString(s));
         nattrs++;
     }
 
+ freebuf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
+
+ freetgt:
+    free_tgt(&tgt);
 
     /* Return the result */
     return mylist;
@@ -796,7 +898,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     int nofollow = 0;
     ssize_t nalloc, nret;
     PyObject *myarg;
-    PyObject *mylist;
+    PyObject *res;
     char *ns = NULL;
     Py_ssize_t nattrs;
     char *s;
@@ -804,27 +906,31 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
-                          &myarg, &nofollow, &ns))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iet", kwlist,
+                                     &myarg, &nofollow, NULL, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
-        return NULL;
+    if(!convertObj(myarg, &tgt, nofollow)) {
+        res = NULL;
+        goto freearg;
+    }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        res = NULL;
+        goto freetgt;
     }
 
     /* Now retrieve the list of attributes */
     if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
-        PyMem_Free(buf);
-        return PyErr_SetFromErrno(PyExc_IOError);
+        res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freebuf;
     }
 
     /* Compute the number of attributes in the list */
@@ -833,22 +939,28 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
             nattrs++;
     }
     /* Create the list which will hold the result */
-    mylist = PyList_New(nattrs);
+    res = PyList_New(nattrs);
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
         const char *name = matches_ns(ns, s);
         if(name!=NULL) {
-            PyList_SET_ITEM(mylist, nattrs, PyString_FromString(name));
+            PyList_SET_ITEM(res, nattrs, PyBytes_FromString(name));
             nattrs++;
         }
     }
 
+ freebuf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
 
+ freetgt:
+    free_tgt(&tgt);
+ freearg:
+    PyMem_Free(ns);
+
     /* Return the result */
-    return mylist;
+    return res;
 }
 
 static PyMethodDef xattr_methods[] = {

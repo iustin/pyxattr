@@ -1,6 +1,7 @@
 #
 #
 
+import sys
 import unittest
 import tempfile
 import os
@@ -9,14 +10,24 @@ import errno
 import xattr
 from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
 
+if sys.hexversion >= 0x03000000:
+    PY3K = True
+else:
+    PY3K = False
+
 TEST_DIR = os.environ.get("TESTDIR", ".")
 
 
 class xattrTest(unittest.TestCase):
     USER_NN = "test"
-    USER_ATTR = "%s.%s" % (NS_USER, USER_NN)
+    USER_ATTR = NS_USER.decode() + "." + USER_NN
     USER_VAL = "abc"
     MANYOPS_COUNT = 131072
+
+    if PY3K:
+        USER_NN = USER_NN.encode()
+        USER_VAL = USER_VAL.encode()
+        USER_ATTR = USER_ATTR.encode()
 
     def setUp(self):
         """set up function"""
@@ -67,7 +78,8 @@ class xattrTest(unittest.TestCase):
                               XATTR_REPLACE)
         try:
             xattr.setxattr(item, self.USER_ATTR, self.USER_VAL, 0, symlink)
-        except IOError, err:
+        except IOError:
+            err = sys.exc_info()[1]
             if err.errno == errno.EPERM and symlink:
                 # symlinks may fail, in which case we abort the rest
                 # of the test for this case
@@ -105,7 +117,8 @@ class xattrTest(unittest.TestCase):
             else:
                 xattr.set(item, self.USER_ATTR, self.USER_VAL,
                           nofollow=symlink)
-        except IOError, err:
+        except IOError:
+            err = sys.exc_info()[1]
             if err.errno == errno.EPERM and symlink:
                 # symlinks may fail, in which case we abort the rest
                 # of the test for this case
@@ -297,6 +310,8 @@ class xattrTest(unittest.TestCase):
         fh, fname = self._getfile()
         os.close(fh)
         BINVAL = "abc" + '\0' + "def"
+        if PY3K:
+            BINVAL = BINVAL.encode()
         xattr.setxattr(fname, self.USER_ATTR, BINVAL)
         self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
         self.failUnlessEqual(xattr.getxattr(fname, self.USER_ATTR), BINVAL)
@@ -308,6 +323,8 @@ class xattrTest(unittest.TestCase):
         fh, fname = self._getfile()
         os.close(fh)
         BINVAL = "abc" + '\0' + "def"
+        if PY3K:
+            BINVAL = BINVAL.encode()
         xattr.set(fname, self.USER_ATTR, BINVAL)
         self.failUnlessEqual(xattr.list(fname), [self.USER_ATTR])
         self.failUnlessEqual(xattr.list(fname, namespace=NS_USER),
