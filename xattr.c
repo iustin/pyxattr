@@ -53,7 +53,15 @@ typedef struct {
         const char *name;
         int fd;
     };
+    PyObject *tmp;
 } target_t;
+
+/* Cleans up a tgt structure */
+static void free_tgt(target_t *tgt) {
+    if (tgt->tmp != NULL) {
+        Py_DECREF(tgt->tmp);
+    }
+}
 
 /** Converts from a string, file or int argument to what we need. */
 static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
