@@ -376,7 +376,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     char *ns = NULL;
     char *buf_list, *buf_val;
     char *s;
-    size_t nalloc, nlist, nval;
+    ssize_t nalloc, nlist, nval;
     PyObject *mylist;
     target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
