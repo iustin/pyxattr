@@ -185,8 +185,8 @@ pygetxattr(PyObject *self, PyObject *args)
 {
     PyObject *myarg;
     target_t tgt;
-    int nofollow=0;
-    char *attrname;
+    int nofollow = 0;
+    char *attrname = NULL;
     char *buf;
     ssize_t nalloc, nret;
     PyObject *res;
@@ -258,8 +258,8 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
 {
     PyObject *myarg;
     target_t tgt;
-    int nofollow=0;
-    char *attrname, *namebuf;
+    int nofollow = 0;
+    char *attrname = NULL, *namebuf;
     const char *fullname;
     char *buf;
     char *ns = NULL;
@@ -347,7 +347,7 @@ static char __get_all_doc__[] =
 static PyObject *
 get_all(PyObject *self, PyObject *args, PyObject *keywds)
 {
-    PyObject *myarg;
+    PyObject *myarg, *res;
     int dolink=0;
     char *ns = NULL;
     char *buf_list, *buf_val;
@@ -484,10 +484,10 @@ static char __pysetxattr_doc__[] =
 static PyObject *
 pysetxattr(PyObject *self, PyObject *args)
 {
-    PyObject *myarg;
-    int nofollow=0;
-    char *attrname;
-    char *buf;
+    PyObject *myarg, *res;
+    int nofollow = 0;
+    char *attrname = NULL;
+    char *buf = NULL;
     Py_ssize_t bufsize;
     int nret;
     int flags = 0;
@@ -549,10 +549,10 @@ static char __set_doc__[] =
 static PyObject *
 xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
 {
-    PyObject *myarg;
-    int nofollow=0;
-    char *attrname;
-    char *buf;
+    PyObject *myarg, *res;
+    int nofollow = 0;
+    char *attrname = NULL;
+    char *buf = NULL;
     Py_ssize_t bufsize;
     int nret;
     int flags = 0;
@@ -607,9 +607,9 @@ static char __pyremovexattr_doc__[] =
 static PyObject *
 pyremovexattr(PyObject *self, PyObject *args)
 {
-    PyObject *myarg;
-    int nofollow=0;
-    char *attrname;
+    PyObject *myarg, *res;
+    int nofollow = 0;
+    char *attrname = NULL;
     int nret;
     target_t tgt;
 
@@ -657,9 +657,9 @@ static char __remove_doc__[] =
 static PyObject *
 xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 {
-    PyObject *myarg;
-    int nofollow=0;
-    char *attrname, *name_buf;
+    PyObject *myarg, *res;
+    int nofollow = 0;
+    char *attrname = NULL, *name_buf;
     char *ns = NULL;
     const char *full_name;
     int nret;
@@ -793,7 +793,7 @@ static PyObject *
 xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 {
     char *buf;
-    int nofollow=0;
+    int nofollow = 0;
     ssize_t nalloc, nret;
     PyObject *myarg;
     PyObject *mylist;
