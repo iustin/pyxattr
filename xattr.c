@@ -216,8 +216,7 @@ pygetxattr(PyObject *self, PyObject *args)
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
-        res = NULL;
+        res = PyErr_NoMemory();
         goto freetgt;
     }
 
@@ -304,8 +303,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
-        res = NULL;
+        res = PyErr_NoMemory();
         goto freenamebuf;
     }
 
@@ -402,8 +400,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
-        res = NULL;
+        res = PyErr_NoMemory();
         goto freetgt;
     }
 
@@ -419,9 +416,8 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     mylist = PyList_New(0);
     nalloc = ESTIMATE_ATTR_SIZE;
     if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
         Py_DECREF(mylist);
-        res = NULL;
+        res = PyErr_NoMemory();
         goto free_buf_list;
     }
 
@@ -827,8 +823,7 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
-        mylist = NULL;
+        mylist = PyErr_NoMemory();
         goto freetgt;
     }
 
@@ -922,8 +917,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        PyErr_NoMemory();
-        res = NULL;
+        res = PyErr_NoMemory();
         goto freetgt;
     }
 
@@ -935,7 +929,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Compute the number of attributes in the list */
     for(s = buf, nattrs = 0; (s - buf) < nret; s += strlen(s) + 1) {
-        if(matches_ns(ns, s)!=NULL)
+        if(matches_ns(ns, s) != NULL)
             nattrs++;
     }
     /* Create the list which will hold the result */
