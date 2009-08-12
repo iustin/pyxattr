@@ -551,7 +551,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                     buf_val = buf_val_tmp;
                     nalloc = realloc_size;
                     continue;
-                } else if(errno == ENODATA || errno == ENOATTR) {
+                } else if(
+#ifdef ENODATA
+                          errno == ENODATA ||
+#endif
+                          errno == ENOATTR) {
                     /* this attribute has gone away since we queried
                        the attribute list */
                     missing = 1;
