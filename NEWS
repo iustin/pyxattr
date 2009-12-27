@@ -1,3 +1,9 @@
+Version 0.5
+===========
+
+Implemented support for python 3. This required a significant change to
+the C module, hence the new version number.
+
 Version 0.4
 ===========
 

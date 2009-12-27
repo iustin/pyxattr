@@ -7,7 +7,7 @@ from distutils.core import setup, Extension
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.4.0"
+version = "0.5.0"
 author = "Iustin Pop"
 author_email = "iusty@k1024.org"
 macros = [
