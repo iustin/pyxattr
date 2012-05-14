@@ -1096,6 +1096,10 @@ void
 initxattr(void)
 #endif
 {
+    PyObject *ns_security = NULL;
+    PyObject *ns_system   = NULL;
+    PyObject *ns_trusted  = NULL;
+    PyObject *ns_user     = NULL;
 #ifdef IS_PY3K
     PyObject *m = PyModule_Create(&xattrmodule);
 #else
@@ -1115,12 +1119,37 @@ initxattr(void)
     PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
 
     /* namespace constants */
-    PyModule_AddObject(m, "NS_SECURITY", PyBytes_FromString("security"));
-    PyModule_AddObject(m, "NS_SYSTEM", PyBytes_FromString("system"));
-    PyModule_AddObject(m, "NS_TRUSTED", PyBytes_FromString("trusted"));
-    PyModule_AddObject(m, "NS_USER", PyBytes_FromString("user"));
+    if((ns_security = PyBytes_FromString("security")) == NULL)
+        goto err_out;
+    if((ns_system = PyBytes_FromString("system")) == NULL)
+        goto err_out;
+    if((ns_trusted = PyBytes_FromString("trusted")) == NULL)
+        goto err_out;
+    if((ns_user = PyBytes_FromString("user")) == NULL)
+        goto err_out;
+    if(PyModule_AddObject(m, "NS_SECURITY", ns_security) < 0)
+        goto err_out;
+    ns_security = NULL;
+    if(PyModule_AddObject(m, "NS_SYSTEM", ns_system) < 0)
+        goto err_out;
+    ns_system = NULL;
+    if(PyModule_AddObject(m, "NS_TRUSTED", ns_trusted) < 0)
+        goto err_out;
+    ns_trusted = NULL;
+    if(PyModule_AddObject(m, "NS_USER", ns_user) < 0)
+        goto err_out;
+    ns_user = NULL;
 
 #ifdef IS_PY3K
     return m;
+#else
+    return;
 #endif
+
+ err_out:
+    Py_XDECREF(ns_user);
+    Py_XDECREF(ns_trusted);
+    Py_XDECREF(ns_system);
+    Py_XDECREF(ns_security);
+    INITERROR;
 }
