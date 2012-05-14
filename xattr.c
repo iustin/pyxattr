@@ -279,7 +279,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     char *attrname = NULL, *namebuf;
     const char *fullname;
     char *buf;
-    char *ns = NULL;
+    const char *ns = NULL;
     ssize_t nalloc, nret;
     PyObject *res;
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
@@ -373,9 +373,9 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 {
     PyObject *myarg, *res;
     int dolink=0;
-    char *ns = NULL;
+    const char *ns = NULL;
     char *buf_list, *buf_val;
-    char *s;
+    const char *s;
     ssize_t nalloc, nlist, nval;
     PyObject *mylist;
     target_t tgt;
@@ -617,7 +617,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     int nret;
     int flags = 0;
     target_t tgt;
-    char *ns = NULL;
+    const char *ns = NULL;
     char *newname;
     const char *full_name;
     static char *kwlist[] = {"item", "name", "value", "flags",
@@ -748,7 +748,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *myarg, *res;
     int nofollow = 0;
     char *attrname = NULL, *name_buf;
-    char *ns = NULL;
+    const char *ns = NULL;
     const char *full_name;
     int nret;
     target_t tgt;
