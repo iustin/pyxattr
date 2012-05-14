@@ -106,26 +106,28 @@ static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
 
 /* Combine a namespace string and an attribute name into a
    fully-qualified name */
-static const char* merge_ns(const char *ns, const char *name, char **buf) {
+static int merge_ns(const char *ns, const char *name,
+                    const char **result, char **buf) {
     if(ns != NULL) {
         int cnt;
         size_t new_size = strlen(ns) + 1 + strlen(name) + 1;
         if((*buf = PyMem_Malloc(new_size)) == NULL) {
             PyErr_NoMemory();
-            return NULL;
+            return -1;
         }
         cnt = snprintf(*buf, new_size, "%s.%s", ns, name);
         if(cnt > new_size || cnt < 0) {
             PyErr_SetString(PyExc_ValueError,
                             "can't format the attribute name");
             PyMem_Free(*buf);
-            return NULL;
+            return -1;
         }
-        return *buf;
+        *result = *buf;
     } else {
         *buf = NULL;
-        return name;
+        *result = name;
     }
+    return 0;
 }
 
 static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
@@ -309,7 +311,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
         goto freearg;
     }
 
-    fullname = merge_ns(ns, attrname, &namebuf);
+    merge_ns(ns, attrname, &fullname, &namebuf);
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
@@ -649,7 +651,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
         goto freearg;
     }
 
-    full_name = merge_ns(ns, attrname, &newname);
+    merge_ns(ns, attrname, &full_name, &newname);
 
     /* Set the attribute's value */
     nret = _set_obj(&tgt, full_name, buf, bufsize, flags);
@@ -780,8 +782,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
         goto freearg;
     }
 
-    full_name = merge_ns(ns, attrname, &name_buf);
-    if(full_name == NULL) {
+    if(merge_ns(ns, attrname, &full_name, &name_buf) < 0) {
         res = NULL;
         goto freearg;
     }
