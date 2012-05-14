@@ -388,7 +388,7 @@ static PyObject *
 get_all(PyObject *self, PyObject *args, PyObject *keywds)
 {
     PyObject *myarg, *res;
-    int dolink=0;
+    int nofollow=0;
     const char *ns = NULL;
     char *buf_list, *buf_val;
     const char *s;
@@ -399,9 +399,9 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
-                                     &myarg, &dolink, &ns))
+                                     &myarg, &nofollow, &ns))
         return NULL;
-    if(convertObj(myarg, &tgt, dolink) < 0)
+    if(convertObj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
     /* Compute first the list of attributes */
