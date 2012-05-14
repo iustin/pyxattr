@@ -76,6 +76,11 @@ __attribute__((cpychecker_negative_result_sets_exception))
 static int convertObj(PyObject *myobj, target_t *tgt, int nofollow)
   CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION;
 
+static int merge_ns(const char *ns, const char *name,
+                    const char **result, char **buf)
+  CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION;
+
+
 /** Converts from a string, file or int argument to what we need.
  *
  * Returns -1 on failure, 0 on success.
@@ -311,7 +316,10 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
         goto freearg;
     }
 
-    merge_ns(ns, attrname, &fullname, &namebuf);
+    if(merge_ns(ns, attrname, &fullname, &namebuf) < 0) {
+        res = NULL;
+        goto freearg;
+    }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
@@ -651,13 +659,15 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
         goto freearg;
     }
 
-    merge_ns(ns, attrname, &full_name, &newname);
+    if(merge_ns(ns, attrname, &full_name, &newname) < 0) {
+        res = NULL;
+        goto freearg;
+    }
 
     /* Set the attribute's value */
     nret = _set_obj(&tgt, full_name, buf, bufsize, flags);
 
-    if(newname != NULL)
-        PyMem_Free(newname);
+    PyMem_Free(newname);
 
     free_tgt(&tgt);
 
