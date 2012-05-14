@@ -63,6 +63,19 @@ static void free_tgt(target_t *tgt) {
     }
 }
 
+/* Used for cpychecker: */
+/* The checker automatically defines this preprocessor name when creating
+   the custom attribute: */
+#if defined(WITH_CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION_ATTRIBUTE)
+   #define CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION \
+__attribute__((cpychecker_negative_result_sets_exception))
+ #else
+   #define CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
+ #endif
+
+static int convertObj(PyObject *myobj, target_t *tgt, int nofollow)
+  CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION;
+
 /** Converts from a string, file or int argument to what we need.
  *
  * Returns -1 on failure, 0 on success.
