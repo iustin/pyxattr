@@ -1,7 +1,7 @@
 /*
     xattr - a python module for manipulating filesystem extended attributes
 
-    Copyright (C) 2002, 2003, 2006, 2008 Iustin Pop <iusty@k1024.org>
+    Copyright (C) 2002, 2003, 2006, 2008, 2012 Iustin Pop <iusty@k1024.org>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -414,6 +414,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     /* Create the list which will hold the result */
     mylist = PyList_New(0);
+    if(mylist == NULL) {
+      res = NULL;
+      goto free_buf_list;
+    }
+
     nalloc = ESTIMATE_ATTR_SIZE;
     if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
         Py_DECREF(mylist);
@@ -450,6 +455,9 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                     missing = 1;
                     break;
                 }
+                /* else we're dealing with a different error, which we
+                   don't know how to handle nicely, so we abort */
+                Py_DECREF(mylist);
                 res = PyErr_SetFromErrno(PyExc_IOError);
                 goto freebufval;
             }
@@ -462,7 +470,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 #else
         my_tuple = Py_BuildValue("ss#", name, buf_val, nval);
 #endif
-
+        if (my_tuple == NULL) {
+          Py_DECREF(mylist);
+          res = NULL;
+          goto freebufval;
+        }
         PyList_Append(mylist, my_tuple);
         Py_DECREF(my_tuple);
     }
@@ -840,6 +852,8 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Create the list which will hold the result */
     mylist = PyList_New(nattrs);
+    if(mylist == NULL)
+      goto freebuf;
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
@@ -934,6 +948,8 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     }
     /* Create the list which will hold the result */
     res = PyList_New(nattrs);
+    if(res == NULL)
+        goto freebuf;
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
