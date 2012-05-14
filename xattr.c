@@ -566,7 +566,7 @@ pysetxattr(PyObject *self, PyObject *args)
     target_t tgt;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTuple(args, "Oetet#|bi", &myarg, NULL, &attrname,
+    if (!PyArg_ParseTuple(args, "Oetet#|ii", &myarg, NULL, &attrname,
                           NULL, &buf, &bufsize, &flags, &nofollow))
         return NULL;
     if(convertObj(myarg, &tgt, nofollow) < 0) {
