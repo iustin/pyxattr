@@ -459,7 +459,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                 if(errno == ERANGE) {
                     nval = _get_obj(&tgt, s, NULL, 0);
                     if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL) {
-                        res = NULL;
+                        res = PyErr_NoMemory();
                         Py_DECREF(mylist);
                         goto free_buf_list;
                     }
