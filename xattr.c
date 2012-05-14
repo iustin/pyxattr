@@ -63,7 +63,10 @@ static void free_tgt(target_t *tgt) {
     }
 }
 
-/** Converts from a string, file or int argument to what we need. */
+/** Converts from a string, file or int argument to what we need.
+ *
+ * Returns -1 on failure, 0 on success.
+ */
 static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
     int fd;
     tgt->tmp = NULL;
@@ -76,16 +79,16 @@ static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
             PyUnicode_AsEncodedString(myobj,
                                       Py_FileSystemDefaultEncoding, "strict");
         if(tgt->tmp == NULL)
-            return 0;
+            return -1;
         tgt->name = PyBytes_AS_STRING(tgt->tmp);
     } else if((fd = PyObject_AsFileDescriptor(myobj)) != -1) {
         tgt->type = T_FD;
         tgt->fd = fd;
     } else {
         PyErr_SetString(PyExc_TypeError, "argument must be string or int");
-        return 0;
+        return -1;
     }
-    return 1;
+    return 0;
 }
 
 /* Combine a namespace string and an attribute name into a
@@ -203,7 +206,7 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -288,7 +291,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iz", kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -385,7 +388,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
                                      &myarg, &dolink, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, dolink))
+    if(convertObj(myarg, &tgt, dolink) < 0)
         return NULL;
 
     /* Compute first the list of attributes */
@@ -543,7 +546,7 @@ pysetxattr(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oetet#|bi", &myarg, NULL, &attrname,
                           NULL, &buf, &bufsize, &flags, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -628,7 +631,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
                                      &myarg, NULL, &attrname, NULL,
                                      &buf, &bufsize, &flags, &nofollow, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -692,7 +695,7 @@ pyremovexattr(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
 
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -759,7 +762,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
 
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -824,7 +827,7 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "O|i", &myarg, &nofollow))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow))
+    if(convertObj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
     /* Find out the needed size of the buffer */
@@ -924,7 +927,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iet", kwlist,
                                      &myarg, &nofollow, NULL, &ns))
         return NULL;
-    if(!convertObj(myarg, &tgt, nofollow)) {
+    if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
