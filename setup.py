@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 import distutils
-from distutils.core import setup, Extension
-#from setuptools import setup, Extension
+from setuptools import setup, Extension
 
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
@@ -26,5 +25,5 @@ setup(name = "pyxattr",
       ext_modules = [Extension("xattr", ["xattr.c"],
                                libraries=["attr"],
                                define_macros=macros)],
-      #test_suite = "test/test_xattr",
+      test_suite = "test",
       )
