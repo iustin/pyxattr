@@ -857,7 +857,13 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
-        PyList_SET_ITEM(mylist, nattrs, PyBytes_FromString(s));
+        PyObject *item = PyBytes_FromString(s);
+        if(item == NULL) {
+            Py_DECREF(mylist);
+            mylist = NULL;
+            goto freebuf;
+        }
+        PyList_SET_ITEM(mylist, nattrs, item);
         nattrs++;
     }
 
@@ -955,7 +961,13 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
         const char *name = matches_ns(ns, s);
         if(name!=NULL) {
-            PyList_SET_ITEM(res, nattrs, PyBytes_FromString(name));
+            PyObject *item = PyBytes_FromString(name);
+            if(item == NULL) {
+                Py_DECREF(res);
+                res = NULL;
+                goto freebuf;
+            }
+            PyList_SET_ITEM(res, nattrs, item);
             nattrs++;
         }
     }
