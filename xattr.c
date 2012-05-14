@@ -479,7 +479,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         Py_DECREF(my_tuple);
     }
 
-    /* Successfull exit */
+    /* Successful exit */
     res = mylist;
 
  freebufval:
