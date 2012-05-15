@@ -36,7 +36,7 @@ typedef int Py_ssize_t;
 #define IS_PY3K
 #define BYTES_CHAR "y"
 #else
-#define BYTES_CHAR "z"
+#define BYTES_CHAR "s"
 #define PyBytes_Check PyString_Check
 #define PyBytes_AS_STRING PyString_AS_STRING
 #define PyBytes_FromStringAndSize PyString_FromStringAndSize
@@ -85,6 +85,12 @@ typedef int Py_ssize_t;
     "    if :const:`XATTR_REPLACE`, the attribute will be replaced,\n" \
     "    giving an error if it doesn't exist;\n" \
     ":type flags: integer\n"
+
+#define NS_CHANGED_DOC \
+    ".. versionchanged:: 0.5.1\n" \
+    "   The namespace argument, if passed, cannot be None anymore; to\n" \
+    "   explicitly specify an empty namespace, pass an empty\n" \
+    "   string (byte string under Python 3)."
 
 
 /* the estimated (startup) attribute buffer size in
@@ -327,6 +333,7 @@ static char __get_doc__[] =
     ":raises EnvironmentError: caused by any system errors\n"
     "\n"
     ".. versionadded:: 0.4\n"
+    NS_CHANGED_DOC
     ;
 
 static PyObject *
@@ -427,6 +434,7 @@ static char __get_all_doc__[] =
     "   attribute names and that were still present when the read\n"
     "   attempt for the value is made.\n"
     ".. versionadded:: 0.4\n"
+    NS_CHANGED_DOC
     ;
 
 static PyObject *
@@ -640,6 +648,7 @@ static char __set_doc__[] =
     ":raises EnvironmentError: caused by any system errors\n"
     "\n"
     ".. versionadded:: 0.4\n"
+    NS_CHANGED_DOC
     ;
 
 /* Wrapper for setxattr */
@@ -766,6 +775,7 @@ static char __remove_doc__[] =
     ":raises EnvironmentError: caused by any system errors\n"
     "\n"
     ".. versionadded:: 0.4\n"
+    NS_CHANGED_DOC
     ;
 
 /* Wrapper for removexattr */
@@ -921,6 +931,7 @@ static char __list_doc__[] =
     ":raises EnvironmentError: caused by any system errors\n"
     "\n"
     ".. versionadded:: 0.4\n"
+    NS_CHANGED_DOC
     ;
 
 /* Wrapper for listxattr */

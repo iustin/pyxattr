@@ -363,5 +363,11 @@ class xattrTest(unittest.TestCase):
             self.assertEqual(xattr.get_all(fh, namespace=NS_USER),
                              [(self.USER_NN, self.USER_VAL)])
 
+    def testNoneNamespace(self):
+        fh, fname = self._getfile()
+        self.assertRaises(TypeError, xattr.get, fh, self.USER_ATTR,
+                          namespace=None)
+
+
 if __name__ == "__main__":
     unittest.main()
