@@ -34,7 +34,9 @@ typedef int Py_ssize_t;
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
+#define BYTES_CHAR "y"
 #else
+#define BYTES_CHAR "z"
 #define PyBytes_Check PyString_Check
 #define PyBytes_AS_STRING PyString_AS_STRING
 #define PyBytes_FromStringAndSize PyString_FromStringAndSize
@@ -113,7 +115,7 @@ static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
    fully-qualified name */
 static int merge_ns(const char *ns, const char *name,
                     const char **result, char **buf) {
-    if(ns != NULL) {
+    if(ns != NULL && *ns != '\0') {
         int cnt;
         size_t new_size = strlen(ns) + 1 + strlen(name) + 1;
         if((*buf = PyMem_Malloc(new_size)) == NULL) {
@@ -308,7 +310,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iz", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
     if(convertObj(myarg, &tgt, nofollow) < 0) {
@@ -408,7 +410,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iz", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
     if(convertObj(myarg, &tgt, nofollow) < 0)
@@ -650,8 +652,8 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
                              "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|iiz", kwlist,
-                                     &myarg, NULL, &attrname, NULL,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|ii" BYTES_CHAR,
+                                     kwlist, &myarg, NULL, &attrname, NULL,
                                      &buf, &bufsize, &flags, &nofollow, &ns))
         return NULL;
     if(convertObj(myarg, &tgt, nofollow) < 0) {
@@ -783,7 +785,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iz", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
 
@@ -941,15 +943,15 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     ssize_t nalloc, nret;
     PyObject *myarg;
     PyObject *res;
-    char *ns = NULL;
+    const char *ns = NULL;
     Py_ssize_t nattrs;
     char *s;
     target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iet", kwlist,
-                                     &myarg, &nofollow, NULL, &ns))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
+                                     &myarg, &nofollow, &ns))
         return NULL;
     if(convertObj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
@@ -1006,7 +1008,6 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
  freetgt:
     free_tgt(&tgt);
  freearg:
-    PyMem_Free(ns);
 
     /* Return the result */
     return res;
