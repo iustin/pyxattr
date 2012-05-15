@@ -1,7 +1,8 @@
 /MANIFEST
 /build
 /dist
-/html
+/doc/doctrees/
+/doc/html/
 /pyxattr.egg-info
 /test/*.pyc
 /xattr.html

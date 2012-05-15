@@ -43,6 +43,50 @@ typedef int Py_ssize_t;
 #define PyBytes_FromString PyString_FromString
 #endif
 
+#define ITEM_DOC \
+    ":param item: a string representing a file-name, or a file-like\n" \
+    "    object, or a file descriptor; this represents the file on \n" \
+    "    which to act\n"
+
+#define NOFOLLOW_DOC \
+    ":param nofollow: if true and if\n" \
+    "    the file name given is a symbolic link, the\n" \
+    "    function will operate on the symbolic link itself instead\n" \
+    "    of its target; defaults to false\n" \
+    ":type nofollow: boolean, optional\n" \
+
+#define NS_DOC \
+    ":param namespace: if given, the attribute must not contain the\n" \
+    "    namespace, but instead it will be taken from this parameter\n" \
+    ":type namespace: bytes\n"
+
+#define NAME_GET_DOC \
+    ":param string name: the attribute whose value to retrieve;\n" \
+    "    usually in the form of ``system.posix_acl`` or ``user.mime_type``\n"
+
+#define NAME_SET_DOC \
+    ":param string name: the attribute whose value to set;\n" \
+    "    usually in the form of ``system.posix_acl`` or ``user.mime_type``\n"
+
+#define NAME_REMOVE_DOC \
+    ":param string name: the attribute to remove;\n" \
+    "    usually in the form of ``system.posix_acl`` or \n" \
+    "    ``user.mime_type``\n"
+
+#define VALUE_DOC \
+    ":param string value: possibly with embedded NULLs; note that there\n" \
+    "    are restrictions regarding the size of the value, for\n" \
+    "    example, for ext2/ext3, maximum size is the block size\n" \
+
+#define FLAGS_DOC \
+    ":param flags: if 0 or omitted the attribute will be\n" \
+    "    created or replaced; if :const:`XATTR_CREATE`, the attribute\n" \
+    "    will be created, giving an error if it already exists;\n" \
+    "    if :const:`XATTR_REPLACE`, the attribute will be replaced,\n" \
+    "    giving an error if it doesn't exist;\n" \
+    ":type flags: integer\n"
+
+
 /* the estimated (startup) attribute buffer size in
    multi-operations */
 #define ESTIMATE_ATTR_SIZE 256
@@ -198,20 +242,16 @@ const char *matches_ns(const char *ns, const char *name) {
 
 /* Wrapper for getxattr */
 static char __pygetxattr_doc__[] =
+    "getxattr(item, attribute[, nofollow=False])\n"
     "Get the value of a given extended attribute (deprecated).\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing filename, or a file-like object,\n"
-    "    or a file descriptor; this represents the file on \n"
-    "    which to act\n"
-    "  - a string, representing the attribute whose value to retrieve;\n"
-    "    usually in form of system.posix_acl or user.mime_type\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;\n"
-    "@deprecated: since version 0.4, this function has been deprecated\n"
-    "    by the L{get} function\n"
+    ITEM_DOC
+    NAME_GET_DOC
+    NOFOLLOW_DOC
+    "\n"
+    ".. deprecated:: 0.4\n"
+    "   this function has been deprecated\n"
+    "   by the :func:`get` function.\n"
     ;
 
 static PyObject *
@@ -268,6 +308,7 @@ pygetxattr(PyObject *self, PyObject *args)
 
 /* Wrapper for getxattr */
 static char __get_doc__[] =
+    "get(item, name[, nofollow=False, namespace=None])\n"
     "Get the value of a given extended attribute.\n"
     "\n"
     "Example:\n"
@@ -276,23 +317,15 @@ static char __get_doc__[] =
     "    >>> xattr.get('/path/to/file', 'comment', namespace=xattr.NS_USER)\n"
     "    'test'\n"
     "\n"
-    "@param item: the item to query; either a string representing the\n"
-    "    filename, or a file-like object, or a file descriptor\n"
-    "@param name: the attribute whose value to set; usually in form of\n"
-    "    system.posix_acl or user.mime_type\n"
-    "@type name: string\n"
-    "@param nofollow: if given and True, and the function is passed a\n"
-    "    filename that points to a symlink, the function will act on the\n"
-    "    symlink itself instead of its target\n"
-    "@type nofollow: boolean\n"
-    "@param namespace: if given, the attribute must not contain the\n"
-    "    namespace itself, but instead the namespace will be taken from\n"
-    "    this parameter\n"
-    "@type namespace: string\n"
-    "@return: the value of the extended attribute (can contain NULLs)\n"
-    "@rtype: string\n"
-    "@raise EnvironmentError: caused by any system errors\n"
-    "@since: 0.4\n"
+    ITEM_DOC
+    NAME_GET_DOC
+    NOFOLLOW_DOC
+    NS_DOC
+    ":return: the value of the extended attribute (can contain NULLs)\n"
+    ":rtype: string\n"
+    ":raises EnvironmentError: caused by any system errors\n"
+    "\n"
+    ".. versionadded:: 0.4\n"
     ;
 
 static PyObject *
@@ -360,40 +393,39 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
 
 /* Wrapper for getxattr */
 static char __get_all_doc__[] =
+    "get_all(item[, nofollow=False, namespace=None])\n"
     "Get all the extended attributes of an item.\n"
     "\n"
     "This function performs a bulk-get of all extended attribute names\n"
     "and the corresponding value.\n"
     "Example:\n"
+    "\n"
     "    >>> xattr.get_all('/path/to/file')\n"
     "    [('user.mime-type', 'plain/text'), ('user.comment', 'test'),\n"
     "     ('system.posix_acl_access', '\\x02\\x00...')]\n"
     "    >>> xattr.get_all('/path/to/file', namespace=xattr.NS_USER)\n"
     "    [('mime-type', 'plain/text'), ('comment', 'test')]\n"
     "\n"
-    "@param item: the item to query; either a string representing the\n"
-    "    filename, or a file-like object, or a file descriptor\n"
-    "@keyword namespace: an optional namespace for filtering the\n"
-    "    attributes; for example, querying all user attributes can be\n"
-    "    accomplished by passing namespace=L{NS_USER}\n"
-    "@type namespace: string\n"
-    "@keyword nofollow: if passed and true, if the target file is a\n"
-    "    symbolic link, the attributes for the link itself will be\n"
-    "    returned, instead of the attributes of the target\n"
-    "@type nofollow: boolean\n"
-    "@return: list of tuples (name, value); note that if a namespace\n"
-    "    argument was passed, it (and the separator) will be stripped from\n"
-    "    the names returned\n"
-    "@rtype: list\n"
-    "@raise EnvironmentError: caused by any system errors\n"
-    "@note: Since reading the whole attribute list is not an atomic\n"
-    "    operation, it might be possible that attributes are added\n"
-    "    or removed between the initial query and the actual reading\n"
-    "    of the attributes; the returned list will contain only the\n"
-    "    attributes that were present at the initial listing of the\n"
-    "    attribute names and that were still present when the read\n"
-    "    attempt for the value is made.\n"
-    "@since: 0.4\n"
+    ITEM_DOC
+    ":keyword namespace: an optional namespace for filtering the\n"
+    "   attributes; for example, querying all user attributes can be\n"
+    "   accomplished by passing namespace=:const:`NS_USER`\n"
+    ":type namespace: string\n"
+    NOFOLLOW_DOC
+    ":return: list of tuples (name, value); note that if a namespace\n"
+    "   argument was passed, it (and the separator) will be stripped from\n"
+    "   the names returned\n"
+    ":rtype: list\n"
+    ":raises EnvironmentError: caused by any system errors\n"
+    "\n"
+    ".. note:: Since reading the whole attribute list is not an atomic\n"
+    "   operation, it might be possible that attributes are added\n"
+    "   or removed between the initial query and the actual reading\n"
+    "   of the attributes; the returned list will contain only the\n"
+    "   attributes that were present at the initial listing of the\n"
+    "   attribute names and that were still present when the read\n"
+    "   attempt for the value is made.\n"
+    ".. versionadded:: 0.4\n"
     ;
 
 static PyObject *
@@ -525,6 +557,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static char __pysetxattr_doc__[] =
+    "setxattr(item, name, value[, flags=0, nofollow=False])\n"
     "Set the value of a given extended attribute (deprecated).\n"
     "\n"
     "Be careful in case you want to set attributes on symbolic\n"
@@ -532,26 +565,15 @@ static char __pysetxattr_doc__[] =
     "flags value if you want the default behaviour (create or "
     "replace)\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing a file-name, or a file-like object,\n"
-    "    or a file descriptor; this represents the file on \n"
-    "    which to act\n"
-    "  - a string, representing the attribute whose value to set;\n"
-    "    usually in form of system.posix_acl or user.mime_type\n"
-    "  - a string, possibly with embedded NULLs; note that there\n"
-    "    are restrictions regarding the size of the value, for\n"
-    "    example, for ext2/ext3, maximum size is the block size\n"
-    "  - (optional) flags; if 0 or omitted the attribute will be \n"
-    "    created or replaced; if XATTR_CREATE, the attribute \n"
-    "    will be created, giving an error if it already exists;\n"
-    "    of XATTR_REPLACE, the attribute will be replaced,\n"
-    "    giving an error if it doesn't exists;\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;\n"
-    "@deprecated: since version 0.4, this function has been deprecated\n"
-    "    by the L{set} function\n"
+    ITEM_DOC
+    NAME_SET_DOC
+    VALUE_DOC
+    FLAGS_DOC
+    NOFOLLOW_DOC
+    "\n"
+    ".. deprecated:: 0.4\n"
+    "   this function has been deprecated\n"
+    "   by the :func:`set` function.\n"
     ;
 
 /* Wrapper for setxattr */
@@ -598,39 +620,25 @@ pysetxattr(PyObject *self, PyObject *args)
 }
 
 static char __set_doc__[] =
+    "set(item, name, value[, flags=0, namespace=None])\n"
     "Set the value of a given extended attribute.\n"
     "\n"
     "Example:\n"
+    "\n"
     "    >>> xattr.set('/path/to/file', 'user.comment', 'test')\n"
     "    >>> xattr.set('/path/to/file', 'comment', 'test',"
     " namespace=xattr.NS_USER)\n"
     "\n"
-    "@param item: the item to query; either a string representing the\n"
-    "    filename, or a file-like object, or a file descriptor\n"
-    "@param name: the attribute whose value to set; usually in form of\n"
-    "    system.posix_acl or user.mime_type\n"
-    "@type name: string\n"
-    "@param value: a string, possibly with embedded NULLs; note that there\n"
-    "    are restrictions regarding the size of the value, for\n"
-    "    example, for ext2/ext3, maximum size is the block size\n"
-    "@type value: string\n"
-    "@param flags: if 0 or ommited the attribute will be\n"
-    "    created or replaced; if L{XATTR_CREATE}, the attribute\n"
-    "    will be created, giving an error if it already exists;\n"
-    "    if L{XATTR_REPLACE}, the attribute will be replaced,\n"
-    "    giving an error if it doesn't exists;\n"
-    "@type flags: integer\n"
-    "@param nofollow: if given and True, and the function is passed a\n"
-    "    filename that points to a symlink, the function will act on the\n"
-    "    symlink itself instead of its target\n"
-    "@type nofollow: boolean\n"
-    "@param namespace: if given, the attribute must not contain the\n"
-    "    namespace itself, but instead the namespace will be taken from\n"
-    "    this parameter\n"
-    "@type namespace: string\n"
-    "@rtype: None\n"
-    "@raise EnvironmentError: caused by any system errors\n"
-    "@since: 0.4\n"
+    ITEM_DOC
+    NAME_SET_DOC
+    VALUE_DOC
+    FLAGS_DOC
+    NOFOLLOW_DOC
+    NS_DOC
+    ":returns: None\n"
+    ":raises EnvironmentError: caused by any system errors\n"
+    "\n"
+    ".. versionadded:: 0.4\n"
     ;
 
 /* Wrapper for setxattr */
@@ -691,21 +699,15 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static char __pyremovexattr_doc__[] =
+    "removexattr(item, name[, nofollow])\n"
     "Remove an attribute from a file (deprecated).\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing a file-name, or a file-like object,\n"
-    "    or a file descriptor; this represents the file on \n"
-    "    which to act\n"
-    "  - a string, representing the attribute to be removed;\n"
-    "    usually in form of system.posix_acl or user.mime_type\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;\n"
-    "@deprecated: since version 0.4, this function has been deprecated\n"
-    "    by the L{remove}"
-    " function\n"
+    ITEM_DOC
+    NAME_REMOVE_DOC
+    NOFOLLOW_DOC
+    "\n"
+    ".. deprecated:: 0.4\n"
+    "   this function has been deprecated by the :func:`remove` function.\n"
     ;
 
 /* Wrapper for removexattr */
@@ -748,27 +750,21 @@ pyremovexattr(PyObject *self, PyObject *args)
 }
 
 static char __remove_doc__[] =
+    "remove(item, name[, nofollow=False, namespace=None])\n"
     "Remove an attribute from a file.\n"
     "\n"
     "Example:\n"
+    "\n"
     "    >>> xattr.remove('/path/to/file', 'user.comment')\n"
     "\n"
-    "@param item: the item to query; either a string representing the\n"
-    "    filename, or a file-like object, or a file descriptor\n"
-    "@param name: the attribute whose value to set; usually in form of\n"
-    "    system.posix_acl or user.mime_type\n"
-    "@type name: string\n"
-    "@param nofollow: if given and True, and the function is passed a\n"
-    "    filename that points to a symlink, the function will act on the\n"
-    "    symlink itself instead of its target\n"
-    "@type nofollow: boolean\n"
-    "@param namespace: if given, the attribute must not contain the\n"
-    "    namespace itself, but instead the namespace will be taken from\n"
-    "    this parameter\n"
-    "@type namespace: string\n"
-    "@since: 0.4\n"
-    "@rtype: None\n"
-    "@raise EnvironmentError: caused by any system errors\n"
+    ITEM_DOC
+    NAME_REMOVE_DOC
+    NOFOLLOW_DOC
+    NS_DOC
+    ":returns: None\n"
+    ":raises EnvironmentError: caused by any system errors\n"
+    "\n"
+    ".. versionadded:: 0.4\n"
     ;
 
 /* Wrapper for removexattr */
@@ -822,19 +818,14 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static char __pylistxattr_doc__[] =
+    "listxattr(item[, nofollow=False])\n"
     "Return the list of attribute names for a file (deprecated).\n"
     "\n"
-    "Parameters:\n"
-    "  - a string representing filename, or a file-like object,\n"
-    "    or a file descriptor; this represents the file to \n"
-    "    be queried\n"
-    "  - (optional) a boolean value (defaults to false), which, if\n"
-    "    the file name given is a symbolic link, makes the\n"
-    "    function operate on the symbolic link itself instead\n"
-    "    of its target;\n"
-    "@deprecated: since version 0.4, this function has been deprecated\n"
-    "    by the L{list}"
-    " function\n"
+    ITEM_DOC
+    NOFOLLOW_DOC
+    "\n"
+    ".. deprecated:: 0.4\n"
+    "   this function has been deprecated by the :func:`list` function.\n"
     ;
 
 /* Wrapper for listxattr */
@@ -908,30 +899,27 @@ pylistxattr(PyObject *self, PyObject *args)
 }
 
 static char __list_doc__[] =
+    "list(item[, nofollow=False, namespace=None])\n"
     "Return the list of attribute names for a file.\n"
     "\n"
     "Example:\n"
+    "\n"
     "    >>> xattr.list('/path/to/file')\n"
     "    ['user.test', 'user.comment', 'system.posix_acl_access']\n"
     "    >>> xattr.list('/path/to/file', namespace=xattr.NS_USER)\n"
     "    ['test', 'comment']\n"
     "\n"
-    "@param item: the item to query; either a string representing the\n"
-    "    filename, or a file-like object, or a file descriptor\n"
-    "@param nofollow: if given and True, and the function is passed a\n"
-    "    filename that points to a symlink, the function will act on the\n"
-    "    symlink itself instead of its target\n"
-    "@type nofollow: boolean\n"
-    "@param namespace: if given, the attribute must not contain the\n"
-    "    namespace itself, but instead the namespace will be taken from\n"
-    "    this parameter\n"
-    "@type namespace: string\n"
-    "@return: list of strings; note that if a namespace argument was\n"
-    "    passed, it (and the separator) will be stripped from the names\n"
+    ITEM_DOC
+    NOFOLLOW_DOC
+    NS_DOC
+    ":returns: the list of attributes; note that if a namespace \n"
+    "    argument was passed, it (and the separator) will be stripped\n"
+    "    from the names\n"
     "    returned\n"
-    "@rtype: list\n"
-    "@raise EnvironmentError: caused by any system errors\n"
-    "@since: 0.4\n"
+    ":rtype: list\n"
+    ":raises EnvironmentError: caused by any system errors\n"
+    "\n"
+    ".. versionadded:: 0.4\n"
     ;
 
 /* Wrapper for listxattr */
@@ -1032,16 +1020,16 @@ static PyMethodDef xattr_methods[] = {
 };
 
 static char __xattr_doc__[] = \
-    "Interface to extended filesystem attributes.\n"
-    "\n"
     "This module gives access to the extended attributes present\n"
     "in some operating systems/filesystems. You can list attributes,\n"
     "get, set and remove them.\n"
     "\n"
     "The module exposes two sets of functions:\n"
-    "  - the 'old' L{listxattr}, L{getxattr}, L{setxattr}, L{removexattr}\n"
+    "  - the 'old' :func:`listxattr`, :func:`getxattr`, :func:`setxattr`,\n"
+    "    :func:`removexattr`\n"
     "    functions which are deprecated since version 0.4\n"
-    "  - the new L{list}, L{get}, L{get_all}, L{set}, L{remove} functions\n"
+    "  - the new :func:`list`, :func:`get`, :func:`get_all`, :func:`set`,\n"
+    "    :func:`remove` functions\n"
     "    which expose a namespace-aware API and simplify a bit the calling\n"
     "    model by using keyword arguments\n"
     "\n"
@@ -1057,23 +1045,21 @@ static char __xattr_doc__[] = \
     "  ['user.mime_type', 'user.comment']\n"
     "  >>> xattr.removexattr (\"file.txt\", \"user.comment\")\n"
     "\n"
-    "@note: Most or all errors reported by the system while using the xattr\n"
-    "library will be reported by raising a L{EnvironmentError}; under Linux,\n"
-    "the following C{errno} values are used:\n"
-    "  - C{ENOATTR} and C{ENODATA} mean that the attribute name is invalid\n"
-    "  - C{ENOTSUP} and C{EOPNOTSUPP} mean that the filesystem does not\n"
-    "    support extended attributes, or that the namespace is invalid\n"
-    "  - C{E2BIG} mean that the attribute value is too big\n"
-    "  - C{ERANGE} mean that the attribute name is too big (it might also\n"
-    "    mean an error in the xattr module itself)\n"
-    "  - C{ENOSPC} and C{EDQUOT} are documented as meaning out of disk space\n"
-    "    or out of disk space because of quota limits\n"
+    ".. note:: Most or all errors reported by the system while using\n"
+    "   the ``xattr`` library will be reported by raising\n"
+    "   a :exc:`EnvironmentError`; under\n"
+    "   Linux, the following ``errno`` values are used:\n"
     "\n"
-    "@group Deprecated API: *xattr\n"
-    "@group Namespace constants: NS_*\n"
-    "@group set function flags: XATTR_CREATE, XATTR_REPLACE\n"
-    "@sort: list, get, get_all, set, remove, listxattr, getxattr, setxattr\n"
-    "    removexattr\n"
+    "   - ``ENOATTR`` and ``ENODATA`` mean that the attribute name is\n"
+    "     invalid\n"
+    "   - ``ENOTSUP`` and ``EOPNOTSUPP`` mean that the filesystem does not\n"
+    "     support extended attributes, or that the namespace is invalid\n"
+    "   - ``E2BIG`` mean that the attribute value is too big\n"
+    "   - ``ERANGE`` mean that the attribute name is too big (it might also\n"
+    "     mean an error in the xattr module itself)\n"
+    "   - ``ENOSPC`` and ``EDQUOT`` are documented as meaning out of disk\n"
+    "     space or out of disk space because of quota limits\n"
+    "\n"
     ;
 
 #ifdef IS_PY3K
@@ -1114,7 +1100,7 @@ initxattr(void)
     PyModule_AddStringConstant(m, "__version__", _XATTR_VERSION);
     PyModule_AddStringConstant(m, "__license__",
                                "GNU Lesser General Public License (LGPL)");
-    PyModule_AddStringConstant(m, "__docformat__", "epytext en");
+    PyModule_AddStringConstant(m, "__docformat__", "restructuredtext en");
 
     PyModule_AddIntConstant(m, "XATTR_CREATE", XATTR_CREATE);
     PyModule_AddIntConstant(m, "XATTR_REPLACE", XATTR_REPLACE);
