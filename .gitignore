@@ -4,7 +4,6 @@
 /doc/doctrees/
 /doc/html/
 /pyxattr.egg-info
+/test/__pycache__/
 /test/*.pyc
-/xattr.html
-/xattr.so
-/xattr.txt
+/*.so
