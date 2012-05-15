@@ -233,6 +233,7 @@ class xattrTest(unittest.TestCase):
         self.assertEqual(xattr.get_all(fo), [(self.USER_ATTR, self.USER_VAL)])
         self.assertEqual(xattr.get_all(fname),
                          [(self.USER_ATTR, self.USER_VAL)])
+        fo.close()
 
     def testMixedAccess(self):
         """test mixed access to file"""
@@ -252,6 +253,7 @@ class xattrTest(unittest.TestCase):
                          [(self.USER_ATTR, self.USER_VAL)])
         self.assertEqual(xattr.get_all(fname, namespace=NS_USER),
                          [(self.USER_NN, self.USER_VAL)])
+        fo.close()
 
     def testDirOpsDeprecated(self):
         """test attribute setting on directories (deprecated functions)"""
