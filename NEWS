@@ -1,10 +1,27 @@
 News
 ====
 
+Version 0.5.1
+-------------
+
+Bug-fix release. Thanks to Dave Malcolm and his cpychecker tool, a
+number of significant bugs (refcount leaks and potential NULL-pointer
+dereferences) have been fixed.
+
+Furthermore, compatibility with Python 3 has been improved; this however
+required changing the meaning of the ``namespace`` argument to the
+functions: if passed, None is no longer a valid value; pass an empty
+string if (due to the structure of your program) you have to pass this
+argument but want to specify no namespace.
+
+Also, the project home page has changed from SourceForge to GitHub, and
+the documentation has been converted from epydoc-based to sphinx.
+
+
 Version 0.5
 -----------
 
-Implemented support for python 3. This required a significant change to
+Implemented support for Python 3. This required a significant change to
 the C module, hence the new version number.
 
 Version 0.4
