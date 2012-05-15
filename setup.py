@@ -27,4 +27,5 @@ setup(name = "pyxattr",
                                libraries=["attr"],
                                define_macros=macros)],
       test_suite = "test",
+      platforms = ["Linux"],
       )
