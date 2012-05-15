@@ -1,5 +1,5 @@
 ======================================
- Welcome to pylibacl's documentation!
+ Welcome to pyxattr's documentation!
 ======================================
 
 .. include:: ../README
