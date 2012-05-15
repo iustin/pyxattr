@@ -222,15 +222,16 @@ static int _remove_obj(target_t *tgt, const char *name) {
 /*
    Checks if an attribute name matches an optional namespace.
 
-   If the namespace is NULL, it will return the name itself.  If the
-   namespace is non-NULL and the name matches, it will return a
-   pointer to the offset in the name after the namespace and the
-   separator. If however the name doesn't match the namespace, it will
-   return NULL.
+   If the namespace is NULL or an empty string, it will return the
+   name itself.  If the namespace is non-NULL and the name matches, it
+   will return a pointer to the offset in the name after the namespace
+   and the separator. If however the name doesn't match the namespace,
+   it will return NULL.
+
 */
 const char *matches_ns(const char *ns, const char *name) {
     size_t ns_size;
-    if (ns == NULL)
+    if (ns == NULL || *ns == '\0')
         return name;
     ns_size = strlen(ns);
 

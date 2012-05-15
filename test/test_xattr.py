@@ -12,8 +12,10 @@ from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
 
 if sys.hexversion >= 0x03000000:
     PY3K = True
+    EMPTY_NS = b''
 else:
     PY3K = False
+    EMPTY_NS = ''
 
 TEST_DIR = os.environ.get("TESTDIR", ".")
 
@@ -126,7 +128,11 @@ class xattrTest(unittest.TestCase):
         self.assertRaises(EnvironmentError, xattr.set, item,
                           self.USER_NN, self.USER_VAL,
                           flags=XATTR_CREATE, namespace=NS_USER)
-        self.assertEqual(xattr.list(item, nofollow=symlink), [self.USER_ATTR])
+        self.assertEqual(xattr.list(item, nofollow=symlink),
+                         [self.USER_ATTR])
+        self.assertEqual(xattr.list(item, nofollow=symlink,
+                                    namespace=EMPTY_NS),
+                         [self.USER_ATTR])
         self.assertEqual(xattr.list(item, namespace=NS_USER, nofollow=symlink),
                          [self.USER_NN])
         self.assertEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
@@ -345,6 +351,7 @@ class xattrTest(unittest.TestCase):
         VN = [self.USER_NN]
         for i in range(self.MANYOPS_COUNT):
             self.assertEqual(xattr.list(fh), VL)
+            self.assertEqual(xattr.list(fh, namespace=EMPTY_NS), VL)
             self.assertEqual(xattr.list(fh, namespace=NS_USER), VN)
         for i in range(self.MANYOPS_COUNT):
             self.assertEqual(xattr.get(fh, self.USER_ATTR), self.USER_VAL)
