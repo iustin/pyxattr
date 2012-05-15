@@ -19,6 +19,9 @@ $(DOCHTML)/index.html: $(MODNAME) $(RSTFILES)
 
 doc: $(DOCHTML)/index.html
 
+dist:
+	fakeroot ./setup.py sdist
+
 test:
 	for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2; do \
 	  if type python$$ver >/dev/null; then \
@@ -32,4 +35,4 @@ clean:
 	rm -f $(MODNAME)
 	rm -rf build
 
-.PHONY: doc test clean
+.PHONY: doc test clean dist
