@@ -1,23 +1,30 @@
 pyxattr
 =======
 
-About
------
-
 This is the pyxattr module, a Python extension module which gives access
 to the extended attributes for filesystem objects available in some
 operating systems.
 
-For usage details, see the documentation of the module using epydoc.
-The project web page is http://pyxattr.sourceforge.net/
+Downloads: go to https://github.com/iustin/pyxattr/downloads. Latest
+version is 0.5.1. The source repository is either at
+http://git.k1024.org/pyxattr.git or at
+https://github.com/iustin/pyxattr.
 
-You need to have setuptools installed in order to build and install the
-module.
+Requirements
+------------
+
+pyxattr has been written and tested on Linux, kernel v2.4 or later, with
+XFS filesystems; ext2/ext3 should work also. If any other platform
+implements the same behavior, pyxattr could be used.
+
+You need to have the attr library (including development headers; most
+distributions should have this, under various names) and setuptools
+installed in order to build and install the module.
 
 License
 -------
 
-pyxattr is Copyright 2002-2008 Iustin Pop.
+pyxattr is Copyright 2002-2008, 2012 Iustin Pop.
 
 pyxattr is free software; you can redistribute it and/or modify it under the
 terms of the GNU Lesser General Public License as published by the Free
@@ -29,4 +36,7 @@ under LGPL version 3 (which, I realized later, is not compatible with GPLv2,
 hence the change to LGPL 2.1), and even older versions were licensed under GPL
 v2 or later.
 
-Iustin Pop, <iusty@k1024.org>
+.. Local Variables:
+.. mode: rst
+.. fill-column: 72
+.. End:
