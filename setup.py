@@ -6,7 +6,7 @@ from setuptools import setup, Extension
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.5.0"
+version = "0.5.1"
 author = "Iustin Pop"
 author_email = "iusty@k1024.org"
 macros = [
@@ -20,7 +20,7 @@ setup(name = "pyxattr",
       long_description = long_desc,
       author = author,
       author_email = author_email,
-      url = "http://pyxattr.sourceforge.net/",
+      url = "http://pyxattr.k1024.org/",
       license = "LGPL",
       ext_modules = [Extension("xattr", ["xattr.c"],
                                libraries=["attr"],
