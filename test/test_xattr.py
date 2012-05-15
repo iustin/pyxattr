@@ -72,10 +72,10 @@ class xattrTest(unittest.TestCase):
 
     def _checkDeprecated(self, item, symlink=False):
         """check deprecated list, set, get operations against an item"""
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [])
-        self.failUnlessRaises(EnvironmentError, xattr.setxattr, item,
-                              self.USER_ATTR, self.USER_VAL,
-                              XATTR_REPLACE)
+        self.assertEqual(xattr.listxattr(item, symlink), [])
+        self.assertRaises(EnvironmentError, xattr.setxattr, item,
+                          self.USER_ATTR, self.USER_VAL,
+                          XATTR_REPLACE)
         try:
             xattr.setxattr(item, self.USER_ATTR, self.USER_VAL, 0, symlink)
         except IOError:
@@ -85,30 +85,27 @@ class xattrTest(unittest.TestCase):
                 # of the test for this case
                 return
             raise
-        self.failUnlessRaises(EnvironmentError, xattr.setxattr, item,
-                              self.USER_ATTR, self.USER_VAL,
-                              XATTR_CREATE)
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(item, self.USER_ATTR, symlink),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
-                             [(self.USER_ATTR, self.USER_VAL)])
+        self.assertRaises(EnvironmentError, xattr.setxattr, item,
+                          self.USER_ATTR, self.USER_VAL, XATTR_CREATE)
+        self.assertEqual(xattr.listxattr(item, symlink), [self.USER_ATTR])
+        self.assertEqual(xattr.getxattr(item, self.USER_ATTR, symlink),
+                         self.USER_VAL)
+        self.assertEqual(xattr.get_all(item, nofollow=symlink),
+                         [(self.USER_ATTR, self.USER_VAL)])
         xattr.removexattr(item, self.USER_ATTR)
-        self.failUnlessEqual(xattr.listxattr(item, symlink), [])
-        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink), [])
-        self.failUnlessRaises(EnvironmentError, xattr.removexattr,
-                              item, self.USER_ATTR)
+        self.assertEqual(xattr.listxattr(item, symlink), [])
+        self.assertEqual(xattr.get_all(item, nofollow=symlink), [])
+        self.assertRaises(EnvironmentError, xattr.removexattr,
+                          item, self.USER_ATTR)
 
     def _checkListSetGet(self, item, symlink=False, use_ns=False):
         """check list, set, get operations against an item"""
-        self.failUnlessEqual(xattr.list(item, symlink), [])
-        self.failUnlessRaises(EnvironmentError, xattr.set, item,
-                              self.USER_ATTR, self.USER_VAL,
-                              flags=XATTR_REPLACE)
-        self.failUnlessRaises(EnvironmentError, xattr.set, item,
-                              self.USER_NN, self.USER_VAL,
-                              flags=XATTR_REPLACE,
-                              namespace=NS_USER)
+        self.assertEqual(xattr.list(item, symlink), [])
+        self.assertRaises(EnvironmentError, xattr.set, item,
+                          self.USER_ATTR, self.USER_VAL, flags=XATTR_REPLACE)
+        self.assertRaises(EnvironmentError, xattr.set, item,
+                          self.USER_NN, self.USER_VAL, flags=XATTR_REPLACE,
+                          namespace=NS_USER)
         try:
             if use_ns:
                 xattr.set(item, self.USER_NN, self.USER_VAL,
@@ -124,70 +121,64 @@ class xattrTest(unittest.TestCase):
                 # of the test for this case
                 return
             raise
-        self.failUnlessRaises(EnvironmentError, xattr.set, item,
-                              self.USER_ATTR, self.USER_VAL,
-                              flags=XATTR_CREATE)
-        self.failUnlessRaises(EnvironmentError, xattr.set, item,
-                              self.USER_NN, self.USER_VAL,
-                              flags=XATTR_CREATE,
-                              namespace=NS_USER)
-        self.failUnlessEqual(xattr.list(item, nofollow=symlink),
-                             [self.USER_ATTR])
-        self.failUnlessEqual(xattr.list(item, namespace=NS_USER,
-                                        nofollow=symlink),
-                             [self.USER_NN])
-        self.failUnlessEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get(item, self.USER_NN, nofollow=symlink,
+        self.assertRaises(EnvironmentError, xattr.set, item,
+                          self.USER_ATTR, self.USER_VAL, flags=XATTR_CREATE)
+        self.assertRaises(EnvironmentError, xattr.set, item,
+                          self.USER_NN, self.USER_VAL,
+                          flags=XATTR_CREATE, namespace=NS_USER)
+        self.assertEqual(xattr.list(item, nofollow=symlink), [self.USER_ATTR])
+        self.assertEqual(xattr.list(item, namespace=NS_USER, nofollow=symlink),
+                         [self.USER_NN])
+        self.assertEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
+                         self.USER_VAL)
+        self.assertEqual(xattr.get(item, self.USER_NN, nofollow=symlink,
+                                   namespace=NS_USER), self.USER_VAL)
+        self.assertEqual(xattr.get_all(item, nofollow=symlink),
+                         [(self.USER_ATTR, self.USER_VAL)])
+        self.assertEqual(xattr.get_all(item, nofollow=symlink,
                                        namespace=NS_USER),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink),
-                             [(self.USER_ATTR, self.USER_VAL)])
-        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink,
-                                           namespace=NS_USER),
-                             [(self.USER_NN, self.USER_VAL)])
+                         [(self.USER_NN, self.USER_VAL)])
         if use_ns:
             xattr.remove(item, self.USER_NN, namespace=NS_USER)
         else:
             xattr.remove(item, self.USER_ATTR)
-        self.failUnlessEqual(xattr.list(item, symlink), [])
-        self.failUnlessEqual(xattr.get_all(item, nofollow=symlink), [])
-        self.failUnlessRaises(EnvironmentError, xattr.remove,
-                              item, self.USER_ATTR, nofollow=symlink)
-        self.failUnlessRaises(EnvironmentError, xattr.remove,
-                              item, self.USER_NN, namespace=NS_USER,
-                              nofollow=symlink)
+        self.assertEqual(xattr.list(item, symlink), [])
+        self.assertEqual(xattr.get_all(item, nofollow=symlink), [])
+        self.assertRaises(EnvironmentError, xattr.remove,
+                          item, self.USER_ATTR, nofollow=symlink)
+        self.assertRaises(EnvironmentError, xattr.remove, item,
+                          self.USER_NN, namespace=NS_USER, nofollow=symlink)
 
     def testNoXattrDeprecated(self):
         """test no attributes (deprecated functions)"""
         fh, fname = self._getfile()
-        self.failUnlessEqual(xattr.listxattr(fname), [])
-        self.failUnlessEqual(xattr.get_all(fname), [])
+        self.assertEqual(xattr.listxattr(fname), [])
+        self.assertEqual(xattr.get_all(fname), [])
         dname = self._getdir()
-        self.failUnlessEqual(xattr.listxattr(dname), [])
-        self.failUnlessEqual(xattr.get_all(dname), [])
+        self.assertEqual(xattr.listxattr(dname), [])
+        self.assertEqual(xattr.get_all(dname), [])
         _, sname = self._getsymlink()
-        self.failUnlessEqual(xattr.listxattr(sname, True), [])
-        self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
+        self.assertEqual(xattr.listxattr(sname, True), [])
+        self.assertEqual(xattr.get_all(sname, nofollow=True), [])
 
     def testNoXattr(self):
         """test no attributes"""
         fh, fname = self._getfile()
-        self.failUnlessEqual(xattr.list(fname), [])
-        self.failUnlessEqual(xattr.list(fname, namespace=NS_USER), [])
-        self.failUnlessEqual(xattr.get_all(fname), [])
-        self.failUnlessEqual(xattr.get_all(fname, namespace=NS_USER), [])
+        self.assertEqual(xattr.list(fname), [])
+        self.assertEqual(xattr.list(fname, namespace=NS_USER), [])
+        self.assertEqual(xattr.get_all(fname), [])
+        self.assertEqual(xattr.get_all(fname, namespace=NS_USER), [])
         dname = self._getdir()
-        self.failUnlessEqual(xattr.list(dname), [])
-        self.failUnlessEqual(xattr.list(dname, namespace=NS_USER), [])
-        self.failUnlessEqual(xattr.get_all(dname), [])
-        self.failUnlessEqual(xattr.get_all(dname, namespace=NS_USER), [])
+        self.assertEqual(xattr.list(dname), [])
+        self.assertEqual(xattr.list(dname, namespace=NS_USER), [])
+        self.assertEqual(xattr.get_all(dname), [])
+        self.assertEqual(xattr.get_all(dname, namespace=NS_USER), [])
         _, sname = self._getsymlink()
-        self.failUnlessEqual(xattr.list(sname, nofollow=True), [])
-        self.failUnlessEqual(xattr.list(sname, nofollow=True,
+        self.assertEqual(xattr.list(sname, nofollow=True), [])
+        self.assertEqual(xattr.list(sname, nofollow=True,
                                         namespace=NS_USER), [])
-        self.failUnlessEqual(xattr.get_all(sname, nofollow=True), [])
-        self.failUnlessEqual(xattr.get_all(sname, nofollow=True,
+        self.assertEqual(xattr.get_all(sname, nofollow=True), [])
+        self.assertEqual(xattr.get_all(sname, nofollow=True,
                                            namespace=NS_USER), [])
 
     def testFileByNameDeprecated(self):
@@ -235,37 +226,32 @@ class xattrTest(unittest.TestCase):
         """test mixed access to file (deprecated functions)"""
         fh, fname = self._getfile()
         fo = os.fdopen(fh)
-        self.failUnlessEqual(xattr.listxattr(fname), [])
+        self.assertEqual(xattr.listxattr(fname), [])
         xattr.setxattr(fname, self.USER_ATTR, self.USER_VAL)
-        self.failUnlessEqual(xattr.listxattr(fh), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(fo, self.USER_ATTR),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get_all(fo),
-                             [(self.USER_ATTR, self.USER_VAL)])
-        self.failUnlessEqual(xattr.get_all(fname),
-                             [(self.USER_ATTR, self.USER_VAL)])
+        self.assertEqual(xattr.listxattr(fh), [self.USER_ATTR])
+        self.assertEqual(xattr.getxattr(fo, self.USER_ATTR), self.USER_VAL)
+        self.assertEqual(xattr.get_all(fo), [(self.USER_ATTR, self.USER_VAL)])
+        self.assertEqual(xattr.get_all(fname),
+                         [(self.USER_ATTR, self.USER_VAL)])
 
     def testMixedAccess(self):
         """test mixed access to file"""
         fh, fname = self._getfile()
         fo = os.fdopen(fh)
-        self.failUnlessEqual(xattr.list(fname), [])
+        self.assertEqual(xattr.list(fname), [])
         xattr.set(fname, self.USER_ATTR, self.USER_VAL)
-        self.failUnlessEqual(xattr.list(fh), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.list(fh, namespace=NS_USER),
-                             [self.USER_NN])
-        self.failUnlessEqual(xattr.get(fo, self.USER_ATTR),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get(fo, self.USER_NN, namespace=NS_USER),
-                             self.USER_VAL)
-        self.failUnlessEqual(xattr.get_all(fo),
-                             [(self.USER_ATTR, self.USER_VAL)])
-        self.failUnlessEqual(xattr.get_all(fo, namespace=NS_USER),
-                             [(self.USER_NN, self.USER_VAL)])
-        self.failUnlessEqual(xattr.get_all(fname),
-                             [(self.USER_ATTR, self.USER_VAL)])
-        self.failUnlessEqual(xattr.get_all(fname, namespace=NS_USER),
-                             [(self.USER_NN, self.USER_VAL)])
+        self.assertEqual(xattr.list(fh), [self.USER_ATTR])
+        self.assertEqual(xattr.list(fh, namespace=NS_USER), [self.USER_NN])
+        self.assertEqual(xattr.get(fo, self.USER_ATTR), self.USER_VAL)
+        self.assertEqual(xattr.get(fo, self.USER_NN, namespace=NS_USER),
+                         self.USER_VAL)
+        self.assertEqual(xattr.get_all(fo), [(self.USER_ATTR, self.USER_VAL)])
+        self.assertEqual(xattr.get_all(fo, namespace=NS_USER),
+                         [(self.USER_NN, self.USER_VAL)])
+        self.assertEqual(xattr.get_all(fname),
+                         [(self.USER_ATTR, self.USER_VAL)])
+        self.assertEqual(xattr.get_all(fname, namespace=NS_USER),
+                         [(self.USER_NN, self.USER_VAL)])
 
     def testDirOpsDeprecated(self):
         """test attribute setting on directories (deprecated functions)"""
@@ -281,28 +267,28 @@ class xattrTest(unittest.TestCase):
     def testSymlinkOpsDeprecated(self):
         """test symlink operations (deprecated functions)"""
         _, sname = self._getsymlink()
-        self.failUnlessRaises(EnvironmentError, xattr.listxattr, sname)
+        self.assertRaises(EnvironmentError, xattr.listxattr, sname)
         self._checkDeprecated(sname, symlink=True)
         target, sname = self._getsymlink(dangling=False)
         xattr.setxattr(target, self.USER_ATTR, self.USER_VAL)
-        self.failUnlessEqual(xattr.listxattr(target), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.listxattr(sname, True), [])
-        self.failUnlessRaises(EnvironmentError, xattr.removexattr, sname,
-                              self.USER_ATTR, True)
+        self.assertEqual(xattr.listxattr(target), [self.USER_ATTR])
+        self.assertEqual(xattr.listxattr(sname, True), [])
+        self.assertRaises(EnvironmentError, xattr.removexattr, sname,
+                          self.USER_ATTR, True)
         xattr.removexattr(sname, self.USER_ATTR, False)
 
     def testSymlinkOps(self):
         """test symlink operations"""
         _, sname = self._getsymlink()
-        self.failUnlessRaises(EnvironmentError, xattr.list, sname)
+        self.assertRaises(EnvironmentError, xattr.list, sname)
         self._checkListSetGet(sname, symlink=True)
         self._checkListSetGet(sname, symlink=True, use_ns=True)
         target, sname = self._getsymlink(dangling=False)
         xattr.set(target, self.USER_ATTR, self.USER_VAL)
-        self.failUnlessEqual(xattr.list(target), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.list(sname, nofollow=True), [])
-        self.failUnlessRaises(EnvironmentError, xattr.remove, sname,
-                              self.USER_ATTR, nofollow=True)
+        self.assertEqual(xattr.list(target), [self.USER_ATTR])
+        self.assertEqual(xattr.list(sname, nofollow=True), [])
+        self.assertRaises(EnvironmentError, xattr.remove, sname,
+                          self.USER_ATTR, nofollow=True)
         xattr.remove(sname, self.USER_ATTR, nofollow=False)
 
     def testBinaryPayloadDeprecated(self):
@@ -313,9 +299,9 @@ class xattrTest(unittest.TestCase):
         if PY3K:
             BINVAL = BINVAL.encode()
         xattr.setxattr(fname, self.USER_ATTR, BINVAL)
-        self.failUnlessEqual(xattr.listxattr(fname), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.getxattr(fname, self.USER_ATTR), BINVAL)
-        self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
+        self.assertEqual(xattr.listxattr(fname), [self.USER_ATTR])
+        self.assertEqual(xattr.getxattr(fname, self.USER_ATTR), BINVAL)
+        self.assertEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
         xattr.removexattr(fname, self.USER_ATTR)
 
     def testBinaryPayload(self):
@@ -326,15 +312,14 @@ class xattrTest(unittest.TestCase):
         if PY3K:
             BINVAL = BINVAL.encode()
         xattr.set(fname, self.USER_ATTR, BINVAL)
-        self.failUnlessEqual(xattr.list(fname), [self.USER_ATTR])
-        self.failUnlessEqual(xattr.list(fname, namespace=NS_USER),
-                             [self.USER_NN])
-        self.failUnlessEqual(xattr.get(fname, self.USER_ATTR), BINVAL)
-        self.failUnlessEqual(xattr.get(fname, self.USER_NN,
-                                       namespace=NS_USER), BINVAL)
-        self.failUnlessEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
-        self.failUnlessEqual(xattr.get_all(fname, namespace=NS_USER),
-                             [(self.USER_NN, BINVAL)])
+        self.assertEqual(xattr.list(fname), [self.USER_ATTR])
+        self.assertEqual(xattr.list(fname, namespace=NS_USER), [self.USER_NN])
+        self.assertEqual(xattr.get(fname, self.USER_ATTR), BINVAL)
+        self.assertEqual(xattr.get(fname, self.USER_NN,
+                                   namespace=NS_USER), BINVAL)
+        self.assertEqual(xattr.get_all(fname), [(self.USER_ATTR, BINVAL)])
+        self.assertEqual(xattr.get_all(fname, namespace=NS_USER),
+                         [(self.USER_NN, BINVAL)])
         xattr.remove(fname, self.USER_ATTR)
 
     def testManyOpsDeprecated(self):
@@ -343,13 +328,12 @@ class xattrTest(unittest.TestCase):
         xattr.setxattr(fh, self.USER_ATTR, self.USER_VAL)
         VL = [self.USER_ATTR]
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.listxattr(fh), VL)
+            self.assertEqual(xattr.listxattr(fh), VL)
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.getxattr(fh, self.USER_ATTR),
-                                 self.USER_VAL)
+            self.assertEqual(xattr.getxattr(fh, self.USER_ATTR), self.USER_VAL)
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.get_all(fh),
-                                 [(self.USER_ATTR, self.USER_VAL)])
+            self.assertEqual(xattr.get_all(fh),
+                             [(self.USER_ATTR, self.USER_VAL)])
 
     def testManyOps(self):
         """test many ops"""
@@ -358,19 +342,17 @@ class xattrTest(unittest.TestCase):
         VL = [self.USER_ATTR]
         VN = [self.USER_NN]
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.list(fh), VL)
-            self.failUnlessEqual(xattr.list(fh, namespace=NS_USER), VN)
+            self.assertEqual(xattr.list(fh), VL)
+            self.assertEqual(xattr.list(fh, namespace=NS_USER), VN)
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.get(fh, self.USER_ATTR),
-                                 self.USER_VAL)
-            self.failUnlessEqual(xattr.get(fh, self.USER_NN,
-                                           namespace=NS_USER),
-                                 self.USER_VAL)
+            self.assertEqual(xattr.get(fh, self.USER_ATTR), self.USER_VAL)
+            self.assertEqual(xattr.get(fh, self.USER_NN, namespace=NS_USER),
+                             self.USER_VAL)
         for i in range(self.MANYOPS_COUNT):
-            self.failUnlessEqual(xattr.get_all(fh),
-                                 [(self.USER_ATTR, self.USER_VAL)])
-            self.failUnlessEqual(xattr.get_all(fh, namespace=NS_USER),
-                                 [(self.USER_NN, self.USER_VAL)])
+            self.assertEqual(xattr.get_all(fh),
+                             [(self.USER_ATTR, self.USER_VAL)])
+            self.assertEqual(xattr.get_all(fh, namespace=NS_USER),
+                             [(self.USER_NN, self.USER_VAL)])
 
 if __name__ == "__main__":
     unittest.main()
