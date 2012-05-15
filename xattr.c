@@ -75,7 +75,7 @@ __attribute__((cpychecker_negative_result_sets_exception))
    #define CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION
  #endif
 
-static int convertObj(PyObject *myobj, target_t *tgt, int nofollow)
+static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow)
   CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION;
 
 static int merge_ns(const char *ns, const char *name,
@@ -87,7 +87,7 @@ static int merge_ns(const char *ns, const char *name,
  *
  * Returns -1 on failure, 0 on success.
  */
-static int convertObj(PyObject *myobj, target_t *tgt, int nofollow) {
+static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow) {
     int fd;
     tgt->tmp = NULL;
     if(PyBytes_Check(myobj)) {
@@ -228,7 +228,7 @@ pygetxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -313,7 +313,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -413,7 +413,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0)
+    if(convert_obj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
     /* Compute first the list of attributes */
@@ -571,7 +571,7 @@ pysetxattr(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oetet#|ii", &myarg, NULL, &attrname,
                           NULL, &buf, &bufsize, &flags, &nofollow))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -656,7 +656,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
                                      kwlist, &myarg, NULL, &attrname, NULL,
                                      &buf, &bufsize, &flags, &nofollow, &ns))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -722,7 +722,7 @@ pyremovexattr(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oet|i", &myarg, NULL, &attrname, &nofollow))
         return NULL;
 
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -789,7 +789,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
 
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
@@ -853,7 +853,7 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "O|i", &myarg, &nofollow))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0)
+    if(convert_obj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
     /* Find out the needed size of the buffer */
@@ -953,7 +953,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
-    if(convertObj(myarg, &tgt, nofollow) < 0) {
+    if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto freearg;
     }
