@@ -1071,6 +1071,8 @@ static char __xattr_doc__[] = \
     "     mean an error in the xattr module itself)\n"
     "   - ``ENOSPC`` and ``EDQUOT`` are documented as meaning out of disk\n"
     "     space or out of disk space because of quota limits\n"
+    ".. note:: Under Python 3, the namespace argument is a byte string,\n"
+    "   not a unicode string.\n"
     "\n"
     ;
 
