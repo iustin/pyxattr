@@ -12,7 +12,7 @@ from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
 
 if sys.hexversion >= 0x03000000:
     PY3K = True
-    EMPTY_NS = b''
+    EMPTY_NS = bytes()
 else:
     PY3K = False
     EMPTY_NS = ''
