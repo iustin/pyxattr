@@ -1,7 +1,7 @@
 /*
     xattr - a python module for manipulating filesystem extended attributes
 
-    Copyright (C) 2002, 2003, 2006, 2008, 2012 Iustin Pop <iusty@k1024.org>
+    Copyright (C) 2002, 2003, 2006, 2008, 2012, 2013 Iustin Pop <iusty@k1024.org>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -593,7 +593,7 @@ pysetxattr(PyObject *self, PyObject *args)
     int nofollow = 0;
     char *attrname = NULL;
     char *buf = NULL;
-    Py_ssize_t bufsize;
+    int bufsize;
     int nret;
     int flags = 0;
     target_t tgt;
@@ -659,7 +659,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     int nofollow = 0;
     char *attrname = NULL;
     char *buf = NULL;
-    Py_ssize_t bufsize;
+    int bufsize;
     int nret;
     int flags = 0;
     target_t tgt;
