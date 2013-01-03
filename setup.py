@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
 import distutils
-from setuptools import setup, Extension
+try:
+  from setuptools import setup, Extension
+except ImportError:
+  from distutils.core import setup, Extension
 
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
