@@ -23,12 +23,16 @@ dist:
 	fakeroot ./setup.py sdist
 
 test:
-	for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2; do \
+	@for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3; do \
 	  if type python$$ver >/dev/null; then \
 	    echo Testing with python$$ver; \
-	    python$$ver ./setup.py test; \
-          fi; \
-	done
+	    python$$ver ./setup.py test -q; \
+	  fi; \
+	done;
+	@if type pypy >/dev/null; then \
+	  echo Testing with pypy; \
+	  pypy ./setup.py test -q; \
+	fi
 
 clean:
 	rm -rf $(DOCHTML) $(DOCTREES)
