@@ -1,6 +1,15 @@
 News
 ====
 
+Version 0.5.2
+-------------
+
+Bug-fix release. Thanks to Michał Górny, it looked like the library had
+problem running under pypy, but actually there was a bug in the
+PyArg_ParseTuple use of et# (signed vs. unsigned, and lack of compiler
+warnings). This was fixed, and now the test suite passed with many
+CPython versions and PyPy (version 1.9).
+
 Version 0.5.1
 -------------
 
