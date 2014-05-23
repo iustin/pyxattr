@@ -17,7 +17,7 @@ else:
     PY3K = False
     EMPTY_NS = ''
 
-TEST_DIR = os.environ.get("TESTDIR", ".")
+TEST_DIR = os.environ.get("TEST_DIR", ".")
 TEST_IGNORE_XATTRS = os.environ.get("TEST_IGNORE_XATTRS", "")
 if TEST_IGNORE_XATTRS == "":
     TEST_IGNORE_XATTRS = []
