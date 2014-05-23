@@ -467,6 +467,11 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         goto freetgt;
     }
 
+    if(nalloc == 0) {
+        res = PyList_New(0);
+        goto freetgt;
+    }
+
     /* Try to allocate the memory, using Python's allocator */
     if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
@@ -864,6 +869,11 @@ pylistxattr(PyObject *self, PyObject *args)
         goto freetgt;
     }
 
+    if(nalloc == 0) {
+        mylist = PyList_New(0);
+        goto freetgt;
+    }
+
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         mylist = PyErr_NoMemory();
@@ -961,6 +971,11 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     /* Find out the needed size of the buffer */
     if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
+        goto freetgt;
+    }
+
+    if(nalloc == 0) {
+        res = PyList_New(0);
         goto freetgt;
     }
 
