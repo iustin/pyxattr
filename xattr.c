@@ -147,7 +147,13 @@ static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow) {
         tgt->type = nofollow ? T_LINK : T_PATH;
         tgt->tmp = \
             PyUnicode_AsEncodedString(myobj,
-                                      Py_FileSystemDefaultEncoding, "strict");
+                                      Py_FileSystemDefaultEncoding,
+#ifdef IS_PY3K
+                                      "surrogateescape"
+#else
+                                      "strict"
+#endif
+                                      );
         if(tgt->tmp == NULL)
             return -1;
         tgt->name = PyBytes_AS_STRING(tgt->tmp);
