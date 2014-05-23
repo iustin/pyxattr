@@ -1,6 +1,23 @@
 News
 ====
 
+Version 0.5.3
+-------------
+
+Small optimisations release:
+
+* ari edelkind contributed a speed-up optimisation for handling of files
+  without xattrs (which is, in general, the expected case)
+* Jonas Borgström contributed a behaviour change to the handling of file
+  names: under Python 3 and up, unicode paths are encoded/decoded using
+  the 'surogatee' handler, instead of the 'strict' handler; while this
+  can hide encoding errors, it mirrors what Python libraries do
+  (e.g. see os.fsencode/fsdecode)
+* Sean Patrick Santos contributed improvements to the test suite so that
+  it can be used even on files systems which have built-in attributes
+  (e.g. when using SELinux, or NFSv4); to enable this, define the
+  attributes in the TEST_IGNORE_XATTRS environment variable
+
 Version 0.5.2
 -------------
 

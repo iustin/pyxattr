@@ -6,7 +6,7 @@ to the extended attributes for filesystem objects available in some
 operating systems.
 
 Downloads: go to http://pyxattr.k1024.org/downloads/. Latest
-version is 0.5.2. The source repository is either at
+version is 0.5.3. The source repository is either at
 http://git.k1024.org/pyxattr.git or at
 https://github.com/iustin/pyxattr.
 
@@ -24,7 +24,7 @@ installed in order to build and install the module.
 License
 -------
 
-pyxattr is Copyright 2002-2008, 2012, 2013 Iustin Pop.
+pyxattr is Copyright 2002-2008, 2012, 2013, 2014 Iustin Pop.
 
 pyxattr is free software; you can redistribute it and/or modify it under the
 terms of the GNU Lesser General Public License as published by the Free

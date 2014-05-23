@@ -9,7 +9,7 @@ except ImportError:
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.5.2"
+version = "0.5.3"
 author = "Iustin Pop"
 author_email = "iusty@k1024.org"
 macros = [
@@ -24,7 +24,7 @@ setup(name = "pyxattr",
       author = author,
       author_email = author_email,
       url = "http://pyxattr.k1024.org/",
-      download_url = "https://github.com/iustin/pyxattr/downloads",
+      download_url = "http://pyxattr.k1024.org/downloads/",
       license = "LGPL",
       ext_modules = [Extension("xattr", ["xattr.c"],
                                libraries=["attr"],
