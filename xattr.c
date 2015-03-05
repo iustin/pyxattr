@@ -376,6 +376,10 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
         goto freetgt;
     }
 
+    /* nalloc is the size of the attribute need to allocate enough for
+     * the null termination as well */
+    nalloc++;
+
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
