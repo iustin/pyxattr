@@ -614,15 +614,25 @@ pysetxattr(PyObject *self, PyObject *args)
     int nofollow = 0;
     char *attrname = NULL;
     char *buf = NULL;
-    int bufsize;
+    Py_ssize_t bufsize_s;
+    size_t bufsize;
     int nret;
     int flags = 0;
     target_t tgt;
 
     /* Parse the arguments */
     if (!PyArg_ParseTuple(args, "Oetet#|ii", &myarg, NULL, &attrname,
-                          NULL, &buf, &bufsize, &flags, &nofollow))
+                          NULL, &buf, &bufsize_s, &flags, &nofollow))
         return NULL;
+
+    if (bufsize_s < 0) {
+        PyErr_SetString(PyExc_ValueError,
+                        "negative value size?!");
+        res = NULL;
+        goto free_arg;
+    }
+    bufsize = (size_t) bufsize_s;
+
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto free_arg;
@@ -680,7 +690,8 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     int nofollow = 0;
     char *attrname = NULL;
     char *buf = NULL;
-    int bufsize;
+    Py_ssize_t bufsize_s;
+    size_t bufsize;
     int nret;
     int flags = 0;
     target_t tgt;
@@ -693,8 +704,17 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|ii" BYTES_CHAR,
                                      kwlist, &myarg, NULL, &attrname, NULL,
-                                     &buf, &bufsize, &flags, &nofollow, &ns))
+                                     &buf, &bufsize_s, &flags, &nofollow, &ns))
         return NULL;
+
+    if (bufsize_s < 0) {
+        PyErr_SetString(PyExc_ValueError,
+                        "negative value size?!");
+        res = NULL;
+        goto free_arg;
+    }
+    bufsize = (size_t) bufsize_s;
+
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
         goto free_arg;
