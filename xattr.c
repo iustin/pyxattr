@@ -523,6 +523,13 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
             if(nval == -1) {
                 if(errno == ERANGE) {
                     nval = _get_obj(&tgt, s, NULL, 0);
+                    /* ERANGE + proper size should not fail, but it
+                       still can, so let's check first */
+                    if(nval == -1) {
+                      res = PyErr_SetFromErrno(PyExc_IOError);
+                      Py_DECREF(mylist);
+                      goto free_buf_val;
+                    }
                     if((buf_val_tmp = PyMem_Realloc(buf_val, nval)) == NULL) {
                         res = PyErr_NoMemory();
                         Py_DECREF(mylist);
