@@ -284,36 +284,36 @@ pygetxattr(PyObject *self, PyObject *args)
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Now retrieve the attribute value */
     if((nret = _get_obj(&tgt, attrname, buf, nalloc)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freebuf;
+        goto free_buf;
     }
 
     /* Create the string which will hold the result */
     res = PyBytes_FromStringAndSize(buf, nret);
 
- freebuf:
+ free_buf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
- freetgt:
+ free_tgt:
     free_tgt(&tgt);
- freearg:
+ free_arg:
     PyMem_Free(attrname);
 
     /* Return the result */
@@ -363,43 +363,43 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     if(merge_ns(ns, attrname, &fullname, &namebuf) < 0) {
         res = NULL;
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freenamebuf;
+        goto free_name_buf;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
-        goto freenamebuf;
+        goto free_name_buf;
     }
 
     /* Now retrieve the attribute value */
     if((nret = _get_obj(&tgt, fullname, buf, nalloc)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freebuf;
+        goto free_buf;
     }
 
     /* Create the string which will hold the result */
     res = PyBytes_FromStringAndSize(buf, nret);
 
     /* Free the buffers, they are no longer needed */
- freebuf:
+ free_buf:
     PyMem_Free(buf);
- freenamebuf:
+ free_name_buf:
     PyMem_Free(namebuf);
- freetgt:
+ free_tgt:
     free_tgt(&tgt);
- freearg:
+ free_arg:
     PyMem_Free(attrname);
 
     /* Return the result */
@@ -471,18 +471,18 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
 
     if(nalloc == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freetgt;
+        goto free_tgt;
     }
 
     if(nalloc == 0) {
         res = PyList_New(0);
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Now retrieve the list of attributes */
@@ -526,7 +526,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                     if((buf_val_tmp = PyMem_Realloc(buf_val, nval)) == NULL) {
                         res = PyErr_NoMemory();
                         Py_DECREF(mylist);
-                        goto freebufval;
+                        goto free_buf_val;
                     } else {
                       buf_val = buf_val_tmp;
                     }
@@ -542,7 +542,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                    don't know how to handle nicely, so we abort */
                 Py_DECREF(mylist);
                 res = PyErr_SetFromErrno(PyExc_IOError);
-                goto freebufval;
+                goto free_buf_val;
             }
             break;
         }
@@ -556,7 +556,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         if (my_tuple == NULL) {
           Py_DECREF(mylist);
           res = NULL;
-          goto freebufval;
+          goto free_buf_val;
         }
         PyList_Append(mylist, my_tuple);
         Py_DECREF(my_tuple);
@@ -565,13 +565,13 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     /* Successful exit */
     res = mylist;
 
- freebufval:
+ free_buf_val:
     PyMem_Free(buf_val);
 
  free_buf_list:
     PyMem_Free(buf_list);
 
- freetgt:
+ free_tgt:
     free_tgt(&tgt);
 
     /* Return the result */
@@ -618,7 +618,7 @@ pysetxattr(PyObject *self, PyObject *args)
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Set the attribute's value */
@@ -628,13 +628,13 @@ pysetxattr(PyObject *self, PyObject *args)
 
     if(nret == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freearg;
+        goto free_arg;
     }
 
     Py_INCREF(Py_None);
     res = Py_None;
 
- freearg:
+ free_arg:
     PyMem_Free(attrname);
     PyMem_Free(buf);
 
@@ -690,12 +690,12 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     if(merge_ns(ns, attrname, &full_name, &newname) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Set the attribute's value */
@@ -707,13 +707,13 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
 
     if(nret == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freearg;
+        goto free_arg;
     }
 
     Py_INCREF(Py_None);
     res = Py_None;
 
- freearg:
+ free_arg:
     PyMem_Free(attrname);
     PyMem_Free(buf);
 
@@ -750,7 +750,7 @@ pyremovexattr(PyObject *self, PyObject *args)
 
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Remove the attribute */
@@ -760,13 +760,13 @@ pyremovexattr(PyObject *self, PyObject *args)
 
     if(nret == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freearg;
+        goto free_arg;
     }
 
     Py_INCREF(Py_None);
     res = Py_None;
 
- freearg:
+ free_arg:
     PyMem_Free(attrname);
 
     /* Return the result */
@@ -812,12 +812,12 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     if(merge_ns(ns, attrname, &full_name, &name_buf) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Remove the attribute */
@@ -829,13 +829,13 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
 
     if(nret == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freearg;
+        goto free_arg;
     }
 
     Py_INCREF(Py_None);
     res = Py_None;
 
- freearg:
+ free_arg:
     PyMem_Free(attrname);
 
     /* Return the result */
@@ -875,24 +875,24 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Find out the needed size of the buffer */
     if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
         mylist = PyErr_SetFromErrno(PyExc_IOError);
-        goto freetgt;
+        goto free_tgt;
     }
 
     if(nalloc == 0) {
         mylist = PyList_New(0);
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         mylist = PyErr_NoMemory();
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Now retrieve the list of attributes */
     if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
         mylist = PyErr_SetFromErrno(PyExc_IOError);
-        goto freebuf;
+        goto free_buf;
     }
 
     /* Compute the number of attributes in the list */
@@ -903,7 +903,7 @@ pylistxattr(PyObject *self, PyObject *args)
     /* Create the list which will hold the result */
     mylist = PyList_New(nattrs);
     if(mylist == NULL)
-      goto freebuf;
+      goto free_buf;
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
@@ -911,17 +911,17 @@ pylistxattr(PyObject *self, PyObject *args)
         if(item == NULL) {
             Py_DECREF(mylist);
             mylist = NULL;
-            goto freebuf;
+            goto free_buf;
         }
         PyList_SET_ITEM(mylist, nattrs, item);
         nattrs++;
     }
 
- freebuf:
+ free_buf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
 
- freetgt:
+ free_tgt:
     free_tgt(&tgt);
 
     /* Return the result */
@@ -974,30 +974,30 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
         res = NULL;
-        goto freearg;
+        goto free_arg;
     }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freetgt;
+        goto free_tgt;
     }
 
     if(nalloc == 0) {
         res = PyList_New(0);
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
         res = PyErr_NoMemory();
-        goto freetgt;
+        goto free_tgt;
     }
 
     /* Now retrieve the list of attributes */
     if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freebuf;
+        goto free_buf;
     }
 
     /* Compute the number of attributes in the list */
@@ -1008,7 +1008,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     /* Create the list which will hold the result */
     res = PyList_New(nattrs);
     if(res == NULL)
-        goto freebuf;
+        goto free_buf;
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
@@ -1018,20 +1018,20 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
             if(item == NULL) {
                 Py_DECREF(res);
                 res = NULL;
-                goto freebuf;
+                goto free_buf;
             }
             PyList_SET_ITEM(res, nattrs, item);
             nattrs++;
         }
     }
 
- freebuf:
+ free_buf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
 
- freetgt:
+ free_tgt:
     free_tgt(&tgt);
- freearg:
+ free_arg:
 
     /* Return the result */
     return res;
