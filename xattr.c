@@ -2,7 +2,7 @@
     xattr - a python module for manipulating filesystem extended attributes
 
     Copyright (C) 2002, 2003, 2006, 2008, 2012, 2013, 2015
-      Iustin Pop <iusty@k1024.org>
+      Iustin Pop <iustin@k1024.org>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
