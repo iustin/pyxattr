@@ -450,7 +450,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *myarg, *res;
     int nofollow=0;
     const char *ns = NULL;
-    char *buf_list, *buf_val;
+    char *buf_list, *buf_val, *buf_val_tmp;
     const char *s;
     ssize_t nalloc, nlist, nval;
     PyObject *mylist;
@@ -523,10 +523,12 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
             if(nval == -1) {
                 if(errno == ERANGE) {
                     nval = _get_obj(&tgt, s, NULL, 0);
-                    if((buf_val = PyMem_Realloc(buf_val, nval)) == NULL) {
+                    if((buf_val_tmp = PyMem_Realloc(buf_val, nval)) == NULL) {
                         res = PyErr_NoMemory();
                         Py_DECREF(mylist);
-                        goto free_buf_list;
+                        goto freebufval;
+                    } else {
+                      buf_val = buf_val_tmp;
                     }
                     nalloc = nval;
                     continue;
