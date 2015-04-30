@@ -367,13 +367,13 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
 
     if(merge_ns(ns, attrname, &fullname, &namebuf) < 0) {
         res = NULL;
-        goto freearg;
+        goto freetgt;
     }
 
     /* Find out the needed size of the buffer */
     if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
-        goto freetgt;
+        goto freenamebuf;
     }
 
     /* Try to allocate the memory, using Python's allocator */
