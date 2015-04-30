@@ -1,6 +1,12 @@
 News
 ====
 
+Version 0.5.4
+-------------
+
+Fix memory leaks on some of the error-handling paths of the `get()`
+function.
+
 Version 0.5.3
 -------------
 
