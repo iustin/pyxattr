@@ -37,6 +37,7 @@ test:
 clean:
 	rm -rf $(DOCHTML) $(DOCTREES)
 	rm -f $(MODNAME)
+	rm -f *.so
 	rm -rf build
 
 .PHONY: doc test clean dist
