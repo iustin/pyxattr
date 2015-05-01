@@ -4,11 +4,15 @@ News
 Version 0.5.4
 -------------
 
+*released Thu, 30 Apr 2015*
+
 Fix memory leaks on some of the error-handling paths of the `get()`
 function.
 
 Version 0.5.3
 -------------
+
+*released Fri, 23 May 2014*
 
 Small optimisations release:
 
@@ -27,6 +31,8 @@ Small optimisations release:
 Version 0.5.2
 -------------
 
+*released Thu, 03 Jan 2013*
+
 Bug-fix release. Thanks to Michał Górny, it looked like the library had
 problem running under pypy, but actually there was a bug in the
 PyArg_ParseTuple use of et# (signed vs. unsigned, and lack of compiler
@@ -35,6 +41,8 @@ CPython versions and PyPy (version 1.9).
 
 Version 0.5.1
 -------------
+
+*released Wed, 16 May 2012*
 
 Bug-fix release. Thanks to Dave Malcolm and his cpychecker tool, a
 number of significant bugs (refcount leaks and potential NULL-pointer
@@ -53,11 +61,15 @@ the documentation has been converted from epydoc-based to sphinx.
 Version 0.5
 -----------
 
+*released Sun, 27 Dec 2009*
+
 Implemented support for Python 3. This required a significant change to
 the C module, hence the new version number.
 
 Version 0.4
 -----------
+
+*released Mon, 30 Jun 2008*
 
 API
 ~~~
@@ -89,6 +101,8 @@ Unittest coverage was improved.
 Version 0.3
 -----------
 
+*released Sun, 09 Mar 2008*
+
 * changed licence from GPL to LGPL (3 or later)
 * changed listxattr return type from tuple to a list
 * developer-related: added unittests
@@ -96,10 +110,14 @@ Version 0.3
 Version 0.2.2
 -------------
 
+*released Sun, 01 Jul 2007*
+
 * fixed listing symlink xattrs
 
 Version 0.2.1
 -------------
+
+*released Sat, 11 Feb 2006*
 
 * fixed a bug when reading symlink EAs (you weren't able to
   do it, actually)
