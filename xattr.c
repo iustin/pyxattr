@@ -276,7 +276,8 @@ pygetxattr(PyObject *self, PyObject *args)
     int nofollow = 0;
     char *attrname = NULL;
     char *buf;
-    ssize_t nalloc, nret;
+    ssize_t nalloc_s, nret;
+    size_t nalloc;
     PyObject *res;
 
     /* Parse the arguments */
@@ -288,10 +289,12 @@ pygetxattr(PyObject *self, PyObject *args)
     }
 
     /* Find out the needed size of the buffer */
-    if((nalloc = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
+    if((nalloc_s = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
         goto free_tgt;
     }
+
+    nalloc = (size_t) nalloc_s;
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
@@ -353,7 +356,8 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     const char *fullname;
     char *buf;
     const char *ns = NULL;
-    ssize_t nalloc, nret;
+    ssize_t nalloc_s, nret;
+    size_t nalloc;
     PyObject *res;
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
@@ -372,10 +376,12 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     }
 
     /* Find out the needed size of the buffer */
-    if((nalloc = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
+    if((nalloc_s = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
         goto free_name_buf;
     }
+
+    nalloc = (size_t) nalloc_s;
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
@@ -452,7 +458,8 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     const char *ns = NULL;
     char *buf_list, *buf_val, *buf_val_tmp;
     const char *s;
-    ssize_t nalloc, nlist, nval;
+    ssize_t nalloc_s, nlist, nval_s;
+    size_t nalloc, nval;
     PyObject *mylist;
     target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
@@ -467,17 +474,19 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     /* Compute first the list of attributes */
 
     /* Find out the needed size of the buffer for the attribute list */
-    nalloc = _list_obj(&tgt, NULL, 0);
+    nalloc_s = _list_obj(&tgt, NULL, 0);
 
-    if(nalloc == -1) {
+    if(nalloc_s == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
         goto free_tgt;
     }
 
-    if(nalloc == 0) {
+    if(nalloc_s == 0) {
         res = PyList_New(0);
         goto free_tgt;
     }
+
+    nalloc = (size_t) nalloc_s;
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
@@ -518,26 +527,27 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         /* Now retrieve the attribute value */
         missing = 0;
         while(1) {
-            nval = _get_obj(&tgt, s, buf_val, nalloc);
+            nval_s = _get_obj(&tgt, s, buf_val, nalloc);
 
-            if(nval == -1) {
+            if(nval_s == -1) {
                 if(errno == ERANGE) {
-                    nval = _get_obj(&tgt, s, NULL, 0);
+                    ssize_t realloc_size_s = _get_obj(&tgt, s, NULL, 0);
                     /* ERANGE + proper size should not fail, but it
                        still can, so let's check first */
-                    if(nval == -1) {
+                    if(realloc_size_s == -1) {
                       res = PyErr_SetFromErrno(PyExc_IOError);
                       Py_DECREF(mylist);
                       goto free_buf_val;
                     }
-                    if((buf_val_tmp = PyMem_Realloc(buf_val, nval)) == NULL) {
+                    size_t realloc_size = (size_t) realloc_size_s;
+                    if((buf_val_tmp = PyMem_Realloc(buf_val, realloc_size))
+                       == NULL) {
                         res = PyErr_NoMemory();
                         Py_DECREF(mylist);
                         goto free_buf_val;
-                    } else {
-                      buf_val = buf_val_tmp;
                     }
-                    nalloc = nval;
+                    buf_val = buf_val_tmp;
+                    nalloc = realloc_size;
                     continue;
                 } else if(errno == ENODATA || errno == ENOATTR) {
                     /* this attribute has gone away since we queried
@@ -550,6 +560,8 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
                 Py_DECREF(mylist);
                 res = PyErr_SetFromErrno(PyExc_IOError);
                 goto free_buf_val;
+            } else {
+              nval = (size_t) nval_s;
             }
             break;
         }
@@ -886,7 +898,8 @@ pylistxattr(PyObject *self, PyObject *args)
 {
     char *buf;
     int nofollow=0;
-    ssize_t nalloc, nret;
+    ssize_t nalloc_s, nret;
+    size_t nalloc;
     PyObject *myarg;
     PyObject *mylist;
     Py_ssize_t nattrs;
@@ -900,15 +913,17 @@ pylistxattr(PyObject *self, PyObject *args)
         return NULL;
 
     /* Find out the needed size of the buffer */
-    if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
+    if((nalloc_s = _list_obj(&tgt, NULL, 0)) == -1) {
         mylist = PyErr_SetFromErrno(PyExc_IOError);
         goto free_tgt;
     }
 
-    if(nalloc == 0) {
+    if(nalloc_s == 0) {
         mylist = PyList_New(0);
         goto free_tgt;
     }
+
+    nalloc = (size_t) nalloc_s;
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
@@ -986,7 +1001,8 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 {
     char *buf;
     int nofollow = 0;
-    ssize_t nalloc, nret;
+    ssize_t nalloc_s, nret;
+    size_t nalloc;
     PyObject *myarg;
     PyObject *res;
     const char *ns = NULL;
@@ -1005,15 +1021,17 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     }
 
     /* Find out the needed size of the buffer */
-    if((nalloc = _list_obj(&tgt, NULL, 0)) == -1) {
+    if((nalloc_s = _list_obj(&tgt, NULL, 0)) == -1) {
         res = PyErr_SetFromErrno(PyExc_IOError);
         goto free_tgt;
     }
 
-    if(nalloc == 0) {
+    if(nalloc_s == 0) {
         res = PyList_New(0);
         goto free_tgt;
     }
+
+    nalloc = (size_t) nalloc_s;
 
     /* Try to allocate the memory, using Python's allocator */
     if((buf = PyMem_Malloc(nalloc)) == NULL) {
