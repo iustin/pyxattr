@@ -1,6 +1,24 @@
 News
 ====
 
+Version 0.5.5
+-------------
+
+*released Fri, 01 May 2015*
+
+Bugfix release:
+
+* fixes some more memory leaks when handling out-of-memory in get_all()
+  function
+* improve error reporting when an attribute disappears after we asked
+  for its length but before we managed to read it
+* fix int/size_t issues found by RedHat/Fedora,
+  https://bugzilla.redhat.com/show_bug.cgi?id=1127310; the fix is
+  different than their fix, but it should accomplish the same thing
+* convert all code to only do explicit casts after checking boundaries,
+  making the code `-Wconversion`-clean (although that warning is not
+  enabled by default)
+
 Version 0.5.4
 -------------
 
