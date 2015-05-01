@@ -182,9 +182,9 @@ static int merge_ns(const char *ns, const char *name,
             return -1;
         }
         cnt = snprintf(*buf, new_size, "%s.%s", ns, name);
-        if((size_t) cnt > new_size || cnt < 0) {
+        if((size_t) cnt >= new_size || cnt < 0) {
             PyErr_SetString(PyExc_ValueError,
-                            "can't format the attribute name");
+                            "unexpected: can't format the attribute name");
             PyMem_Free(*buf);
             return -1;
         }
