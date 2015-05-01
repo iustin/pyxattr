@@ -2,7 +2,7 @@
  Welcome to pyxattr's documentation!
 ======================================
 
-.. include:: ../README
+.. include:: ../README.rst
    :start-line: 2
 
 Contents
