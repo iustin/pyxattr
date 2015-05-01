@@ -174,13 +174,15 @@ static int merge_ns(const char *ns, const char *name,
                     const char **result, char **buf) {
     if(ns != NULL && *ns != '\0') {
         int cnt;
+        /* The value of new_size is related to/must be kept in-sync
+           with the format string below */
         size_t new_size = strlen(ns) + 1 + strlen(name) + 1;
         if((*buf = PyMem_Malloc(new_size)) == NULL) {
             PyErr_NoMemory();
             return -1;
         }
         cnt = snprintf(*buf, new_size, "%s.%s", ns, name);
-        if(cnt > new_size || cnt < 0) {
+        if((size_t) cnt > new_size || cnt < 0) {
             PyErr_SetString(PyExc_ValueError,
                             "can't format the attribute name");
             PyMem_Free(*buf);
