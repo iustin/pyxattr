@@ -1,6 +1,19 @@
 News
 ====
 
+Version 0.5.6
+-------------
+
+*released Sat, 09 Apr 2016*
+
+Small bugfix release:
+
+* Fixes some sign-compare warnings
+* Fixes potential name truncation in merge_ns()
+* Fixes building on systems which don't have ENODATA
+
+Tested with Python 2.7.11, Python 3.5.1 and PyPy 5.0.1.
+
 Version 0.5.5
 -------------
 

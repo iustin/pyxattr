@@ -6,7 +6,7 @@ to the extended attributes for filesystem objects available in some
 operating systems.
 
 Downloads: go to http://pyxattr.k1024.org/downloads/. Latest
-version is 0.5.5. The source repository is either at
+version is 0.5.6. The source repository is either at
 http://git.k1024.org/pyxattr.git or at
 https://github.com/iustin/pyxattr.
 
