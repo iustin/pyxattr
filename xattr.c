@@ -23,7 +23,11 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#if defined(__APPLE__)
+#include <sys/xattr.h>
+#elif defined(__linux__)
 #include <attr/xattr.h>
+#endif
 #include <stdio.h>
 
 /* Compatibility with python 2.4 regarding python size type (PEP 353) */
@@ -196,42 +200,103 @@ static int merge_ns(const char *ns, const char *name,
     return 0;
 }
 
+#if defined(__APPLE__)
+static inline ssize_t _listxattr(const char *path, char *namebuf, size_t size) {
+    return listxattr(path, namebuf, size, 0);
+}
+static inline ssize_t _llistxattr(const char *path, char *namebuf, size_t size) {
+    return listxattr(path, namebuf, size, XATTR_NOFOLLOW);
+}
+static inline ssize_t _flistxattr(int fd, char *namebuf, size_t size) {
+    return flistxattr(fd, namebuf, size, 0);
+}
+
+static inline ssize_t _getxattr (const char *path, const char *name, void *value, size_t size) {
+    return getxattr(path, name, value, size, 0, 0);
+}
+static inline ssize_t _lgetxattr (const char *path, const char *name, void *value, size_t size) {
+    return getxattr(path, name, value, size, 0, XATTR_NOFOLLOW);
+}
+static inline ssize_t _fgetxattr (int filedes, const char *name, void *value, size_t size) {
+    return fgetxattr(filedes, name, value, size, 0, 0);
+}
+
+// [fl]setxattr: Both OS X and Linux define XATTR_CREATE and XATTR_REPLACE for the last option.
+static inline int _setxattr(const char *path, const char *name, const void *value, size_t size, int flags) {
+    return setxattr(path, name, value, size, 0, flags);
+}
+static inline int _lsetxattr(const char *path, const char *name, const void *value, size_t size, int flags) {
+    return setxattr(path, name, value, size, 0, flags & XATTR_NOFOLLOW);
+}
+static inline int _fsetxattr(int filedes, const char *name, const void *value, size_t size, int flags) {
+    return fsetxattr(filedes, name, value, size, 0, flags);
+}
+
+static inline int _removexattr(const char *path, const char *name) {
+    return removexattr(path, name, 0);
+}
+static inline int _lremovexattr(const char *path, const char *name) {
+    return removexattr(path, name, XATTR_NOFOLLOW);
+}
+static inline int _fremovexattr(int filedes, const char *name) {
+    return fremovexattr(filedes, name, 0);
+}
+
+#elif defined(__linux__)
+#define _listxattr(path, list, size) listxattr(path, list, size)
+#define _llistxattr(path, list, size) llistxattr(path, list, size)
+#define _flistxattr(fd, list, size) flistxattr(fd, list, size)
+
+#define _getxattr(path, name, value, size)  getxattr(path, name, value, size)
+#define _lgetxattr(path, name, value, size) lgetxattr(path, name, value, size)
+#define _fgetxattr(fd, name, value, size)   fgetxattr(fd, name, value, size)
+
+#define _setxattr(path, name, value, size, flags)   setxattr(path, name, value, size, flags)
+#define _lsetxattr(path, name, value, size, flags)  lsetxattr(path, name, value, size, flags)
+#define _fsetxattr(fd, name, value, size, flags)    fsetxattr(fd, name, value, size, flags)
+
+#define _removexattr(path, name)    removexattr(path, name)
+#define _lremovexattr(path, name)   lremovexattr(path, name)
+#define _fremovexattr(fd, name)     fremovexattr(fd, name)
+
+#endif
+
 static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
     if(tgt->type == T_FD)
-        return flistxattr(tgt->fd, list, size);
+        return _flistxattr(tgt->fd, list, size);
     else if (tgt->type == T_LINK)
-        return llistxattr(tgt->name, list, size);
+        return _llistxattr(tgt->name, list, size);
     else
-        return listxattr(tgt->name, list, size);
+        return _listxattr(tgt->name, list, size);
 }
 
 static ssize_t _get_obj(target_t *tgt, const char *name, void *value,
                         size_t size) {
     if(tgt->type == T_FD)
-        return fgetxattr(tgt->fd, name, value, size);
+        return _fgetxattr(tgt->fd, name, value, size);
     else if (tgt->type == T_LINK)
-        return lgetxattr(tgt->name, name, value, size);
+        return _lgetxattr(tgt->name, name, value, size);
     else
-        return getxattr(tgt->name, name, value, size);
+        return _getxattr(tgt->name, name, value, size);
 }
 
 static int _set_obj(target_t *tgt, const char *name,
                     const void *value, size_t size, int flags) {
     if(tgt->type == T_FD)
-        return fsetxattr(tgt->fd, name, value, size, flags);
+        return _fsetxattr(tgt->fd, name, value, size, flags);
     else if (tgt->type == T_LINK)
-        return lsetxattr(tgt->name, name, value, size, flags);
+        return _lsetxattr(tgt->name, name, value, size, flags);
     else
-        return setxattr(tgt->name, name, value, size, flags);
+        return _setxattr(tgt->name, name, value, size, flags);
 }
 
 static int _remove_obj(target_t *tgt, const char *name) {
     if(tgt->type == T_FD)
-        return fremovexattr(tgt->fd, name);
+        return _fremovexattr(tgt->fd, name);
     else if (tgt->type == T_LINK)
-        return lremovexattr(tgt->name, name);
+        return _lremovexattr(tgt->name, name);
     else
-        return removexattr(tgt->name, name);
+        return _removexattr(tgt->name, name);
 }
 
 /*

@@ -109,9 +109,9 @@ class xattrTest(unittest.TestCase):
             xattr.setxattr(item, self.USER_ATTR, self.USER_VAL, 0, symlink)
         except IOError:
             err = sys.exc_info()[1]
-            if err.errno == errno.EPERM and symlink:
+            if symlink and (err.errno == errno.EPERM or err.errno == errno.ENOENT):
                 # symlinks may fail, in which case we abort the rest
-                # of the test for this case
+                # of the test for this case (Linux returns EPERM; OS X returns ENOENT)
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
@@ -146,9 +146,9 @@ class xattrTest(unittest.TestCase):
                           nofollow=symlink)
         except IOError:
             err = sys.exc_info()[1]
-            if err.errno == errno.EPERM and symlink:
+            if symlink and (err.errno == errno.EPERM or err.errno == errno.ENOENT):
                 # symlinks may fail, in which case we abort the rest
-                # of the test for this case
+                # of the test for this case (Linux returns EPERM; OS X returns ENOENT)
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.set, item,

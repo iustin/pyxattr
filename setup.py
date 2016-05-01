@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import distutils
+import platform
 try:
   from setuptools import setup, Extension
 except ImportError:
@@ -12,6 +13,9 @@ of the attr C library - see attr(5)."""
 version = "0.5.6"
 author = "Iustin Pop"
 author_email = "iustin@k1024.org"
+libraries = []
+if platform.system() == 'Linux':
+    libraries.append("attr")
 macros = [
     ("_XATTR_VERSION", '"%s"' % version),
     ("_XATTR_AUTHOR", '"%s"' % author),
@@ -27,7 +31,7 @@ setup(name = "pyxattr",
       download_url = "http://pyxattr.k1024.org/downloads/",
       license = "LGPL",
       ext_modules = [Extension("xattr", ["xattr.c"],
-                               libraries=["attr"],
+                               libraries=libraries,
                                define_macros=macros,
                                extra_compile_args=["-Wall", "-Werror", "-Wsign-compare"],
                                )],
