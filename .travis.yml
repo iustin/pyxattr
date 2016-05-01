@@ -28,6 +28,6 @@ addons:
 matrix:
     include:
         - os: osx
-	      language: generic
+          language: generic
     allow_failures:
         - os: osx
