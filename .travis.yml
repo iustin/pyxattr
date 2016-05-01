@@ -24,10 +24,9 @@ addons:
     packages:
       - libattr1-dev
 
-# experimental support for OSX:
+# enable OSX support, with only system python:
 matrix:
     include:
         - os: osx
           language: generic
-    allow_failures:
-        - os: osx
+          python:
