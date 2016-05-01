@@ -23,3 +23,11 @@ addons:
   apt:
     packages:
       - libattr1-dev
+
+# experimental support for OSX:
+matrix:
+    include:
+        - os: osx
+	      language: generic
+    allow_failures:
+        - os: osx
