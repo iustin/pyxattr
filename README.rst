@@ -10,6 +10,8 @@ version is 0.5.6. The source repository is either at
 http://git.k1024.org/pyxattr.git or at
 https://github.com/iustin/pyxattr.
 
+[![Build Status](https://travis-ci.org/iustin/pyxattr.svg?branch=master)](https://travis-ci.org/iustin/pyxattr)
+
 Requirements
 ------------
 
