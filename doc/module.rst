@@ -18,22 +18,22 @@ Constants
 
 .. data:: NS_SECURITY
 
-   The security namespace, used by kernel security modules to store
+   The security name space, used by kernel security modules to store
    (for example) capabilities information.
 
 .. data:: NS_SYSTEM
 
-   The system namespace, used by the kernel to store (for example)
+   The system name space, used by the kernel to store (for example)
    ACLs.
 
 .. data:: NS_TRUSTED
 
-   The trusted namespace, visible and accessibly only to trusted
+   The trusted name space, visible and accessibly only to trusted
    processes, used to implement mechanisms in user space.
 
 .. data:: NS_USER
 
-   The user namespace; this is the namespace accessible to
+   The user name space; this is the name space accessible to
    non-privileged processes.
 
 Functions
