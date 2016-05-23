@@ -18,12 +18,13 @@ Constants
 
 .. data:: NS_SECURITY
 
-   The security namespace, used by kernel security modules.
+   The security namespace, used by kernel security modules to store
+   (for example) capabilities information.
 
 .. data:: NS_SYSTEM
 
-   The system namespace, used by the kernel to store things such as
-   ACLs and capabilities.
+   The system namespace, used by the kernel to store (for example)
+   ACLs.
 
 .. data:: NS_TRUSTED
 
