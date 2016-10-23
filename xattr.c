@@ -167,6 +167,8 @@ static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow) {
         tgt->fd = fd;
     } else {
         PyErr_SetString(PyExc_TypeError, "argument must be string or int");
+        tgt->type = T_PATH;
+        tgt->name = NULL;
         return -1;
     }
     return 0;
