@@ -40,8 +40,10 @@ typedef int Py_ssize_t;
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
 #define BYTES_CHAR "y"
+#define BYTES_TUPLE "yy#"
 #else
 #define BYTES_CHAR "s"
+#define BYTES_TUPLE "ss#"
 #define PyBytes_Check PyString_Check
 #define PyBytes_AS_STRING PyString_AS_STRING
 #define PyBytes_FromStringAndSize PyString_FromStringAndSize
@@ -98,9 +100,14 @@ typedef int Py_ssize_t;
     "   string (byte string under Python 3)."
 
 
-/* the estimated (startup) attribute buffer size in
-   multi-operations */
-#define ESTIMATE_ATTR_SIZE 256
+/* The initial I/O buffer size for list and get operations; if the
+ * actual values will be smaller than this, we save a syscall out of
+ * two and allocate more memory upfront than needed, otherwise we
+ * incur three syscalls (get with ENORANGE, get with 0 to compute
+ * actual size, final get). The test suite is marginally faster (5%)
+ * with this, so it seems worth doing.
+*/
+#define ESTIMATE_ATTR_SIZE 1024
 
 typedef enum {T_FD, T_PATH, T_LINK} target_e;
 
@@ -263,7 +270,11 @@ static inline int _fremovexattr(int filedes, const char *name) {
 
 #endif
 
-static ssize_t _list_obj(target_t *tgt, char *list, size_t size) {
+typedef ssize_t (*buf_getter)(target_t *tgt, const char *name,
+                              void *output, size_t size);
+
+static ssize_t _list_obj(target_t *tgt, const char *unused, void *list,
+                         size_t size) {
     if(tgt->type == T_FD)
         return _flistxattr(tgt->fd, list, size);
     else if (tgt->type == T_LINK)
@@ -299,6 +310,102 @@ static int _remove_obj(target_t *tgt, const char *name) {
         return _lremovexattr(tgt->name, name);
     else
         return _removexattr(tgt->name, name);
+}
+
+/* Perform a get/list operation with appropriate buffer size,
+ * determined dynamically.
+ *
+ * Arguments:
+ * - getter: the function that actually does the I/O.
+ * - tgt, name: passed to the getter.
+ * - buffer: pointer to either an already allocated memory area (in
+ *   which case size contains its current size), or NULL to
+ *   allocate. In all cases (success or failure), the caller should
+ *   deallocate the buffer, using PyMem_Free(). Note that if size is
+ *   zero but buffer already points to allocate memory, it will be
+ *   ignored/leaked.
+ * - size: either size of current buffer (if non-NULL), or size for
+ *   initial allocation (if non-zero), or a zero value which means
+ *   auto-allocate buffer with automatically queried size. Value will
+ *   be updated upon return with the current buffer size.
+ * - io_errno: if non-NULL, the actual errno will be recorded here; if
+ *   zero, the call was successful and the output/size/nval are valid.
+ *
+ * Return value: if positive or zero, buffer will contain the read
+ * value. Otherwise, io_errno will contain the I/O errno, or zero
+ * to signify a Python-level error. In all cases, the Python-level
+ * error is set to the appropriate value.
+ */
+static ssize_t _generic_get(buf_getter getter, target_t *tgt,
+                            const char *name,
+                            char **buffer,
+                            size_t *size,
+                            int *io_errno)
+    CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION;
+
+static ssize_t _generic_get(buf_getter getter, target_t *tgt,
+                            const char *name,
+                            char **buffer,
+                            size_t *size,
+                            int *io_errno) {
+  ssize_t res;
+  /* Clear errno for now, will only set it when it fails in I/O. */
+  if (io_errno != NULL) {
+    *io_errno = 0;
+  }
+
+#define EXIT_IOERROR()                 \
+  {                                    \
+    if (io_errno != NULL) {            \
+        *io_errno = errno;             \
+    }                                  \
+    PyErr_SetFromErrno(PyExc_IOError); \
+    return -1;                         \
+  }
+
+  /* Initialize the buffer, if needed. */
+  if (*size == 0 || *buffer == NULL) {
+    if (*size == 0) {
+      ssize_t nalloc;
+      if ((nalloc = getter(tgt, name, NULL, 0)) == -1) {
+        EXIT_IOERROR();
+      }
+      if (nalloc == 0) {
+        /* Empty, so no need to retrieve it. */
+        return 0;
+      }
+      *size = nalloc;
+    }
+    if((*buffer = PyMem_Malloc(*size)) == NULL) {
+      PyErr_NoMemory();
+      return -1;
+    }
+  }
+  // Try to get the value, while increasing the buffer if too small.
+  while((res = getter(tgt, name, *buffer, *size)) == -1) {
+    if(errno == ERANGE) {
+      ssize_t realloc_size_s = getter(tgt, name, NULL, 0);
+      /* ERANGE + proper size _should_ not fail, but... */
+      if(realloc_size_s == -1) {
+        EXIT_IOERROR();
+      }
+      size_t realloc_size = (size_t) realloc_size_s;
+      char *tmp_buf;
+      if((tmp_buf = PyMem_Realloc(*buffer, realloc_size)) == NULL) {
+        PyErr_NoMemory();
+        return -1;
+      }
+      *buffer = tmp_buf;
+      *size = realloc_size;
+      continue;
+    } else {
+      /* else we're dealing with a different error, which we
+         don't know how to handle nicely, so we return */
+      EXIT_IOERROR();
+    }
+  }
+  return res;
+#undef EXIT_IOERROR
 }
 
 /*
@@ -344,9 +451,9 @@ pygetxattr(PyObject *self, PyObject *args)
     target_t tgt;
     int nofollow = 0;
     char *attrname = NULL;
-    char *buf;
-    ssize_t nalloc_s, nret;
-    size_t nalloc;
+    char *buf = NULL;
+    ssize_t nret;
+    size_t nalloc = ESTIMATE_ATTR_SIZE;
     PyObject *res;
 
     /* Parse the arguments */
@@ -357,33 +464,17 @@ pygetxattr(PyObject *self, PyObject *args)
         goto free_arg;
     }
 
-    /* Find out the needed size of the buffer */
-    if((nalloc_s = _get_obj(&tgt, attrname, NULL, 0)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_tgt;
+    nret = _generic_get(_get_obj, &tgt, attrname, &buf, &nalloc, NULL);
+    if (nret == -1) {
+      res = NULL;
+      goto free_buf;
     }
-
-    nalloc = (size_t) nalloc_s;
-
-    /* Try to allocate the memory, using Python's allocator */
-    if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        res = PyErr_NoMemory();
-        goto free_tgt;
-    }
-
-    /* Now retrieve the attribute value */
-    if((nret = _get_obj(&tgt, attrname, buf, nalloc)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_buf;
-    }
-
     /* Create the string which will hold the result */
     res = PyBytes_FromStringAndSize(buf, nret);
 
  free_buf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
- free_tgt:
     free_tgt(&tgt);
  free_arg:
     PyMem_Free(attrname);
@@ -423,45 +514,29 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     int nofollow = 0;
     char *attrname = NULL, *namebuf;
     const char *fullname;
-    char *buf;
+    char *buf = NULL;
     const char *ns = NULL;
-    ssize_t nalloc_s, nret;
-    size_t nalloc;
-    PyObject *res;
+    ssize_t nret;
+    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    PyObject *res = NULL;
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
+    res = NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
-        res = NULL;
         goto free_arg;
     }
 
     if(merge_ns(ns, attrname, &fullname, &namebuf) < 0) {
-        res = NULL;
         goto free_tgt;
     }
 
-    /* Find out the needed size of the buffer */
-    if((nalloc_s = _get_obj(&tgt, fullname, NULL, 0)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_name_buf;
-    }
-
-    nalloc = (size_t) nalloc_s;
-
-    /* Try to allocate the memory, using Python's allocator */
-    if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        res = PyErr_NoMemory();
-        goto free_name_buf;
-    }
-
-    /* Now retrieve the attribute value */
-    if((nret = _get_obj(&tgt, fullname, buf, nalloc)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_buf;
+    nret = _generic_get(_get_obj, &tgt, fullname, &buf, &nalloc, NULL);
+    if(nret == -1) {
+      goto free_buf;
     }
 
     /* Create the string which will hold the result */
@@ -470,7 +545,6 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     /* Free the buffers, they are no longer needed */
  free_buf:
     PyMem_Free(buf);
- free_name_buf:
     PyMem_Free(namebuf);
  free_tgt:
     free_tgt(&tgt);
@@ -525,13 +599,14 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *myarg, *res;
     int nofollow=0;
     const char *ns = NULL;
-    char *buf_list, *buf_val, *buf_val_tmp;
+    char *buf_list = NULL, *buf_val = NULL;
     const char *s;
-    ssize_t nalloc_s, nlist, nval_s;
-    size_t nalloc, nval;
+    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    ssize_t nlist, nval;
     PyObject *mylist;
     target_t tgt;
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
+    int io_errno;
 
     /* Parse the arguments */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
@@ -540,114 +615,48 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     if(convert_obj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
+    res = NULL;
     /* Compute first the list of attributes */
-
-    /* Find out the needed size of the buffer for the attribute list */
-    nalloc_s = _list_obj(&tgt, NULL, 0);
-
-    if(nalloc_s == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_tgt;
+    nlist = _generic_get(_list_obj, &tgt, NULL, &buf_list,
+                         &nalloc, &io_errno);
+    if (nlist == -1) {
+      /* We can't handle any errors, and the Python error is already
+         set, just bail out. */
+      goto free_tgt;
     }
 
-    if(nalloc_s == 0) {
-        res = PyList_New(0);
-        goto free_tgt;
-    }
-
-    nalloc = (size_t) nalloc_s;
-
-    /* Try to allocate the memory, using Python's allocator */
-    if((buf_list = PyMem_Malloc(nalloc)) == NULL) {
-        res = PyErr_NoMemory();
-        goto free_tgt;
-    }
-
-    /* Now retrieve the list of attributes */
-    nlist = _list_obj(&tgt, buf_list, nalloc);
-
-    if(nlist == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_buf_list;
-    }
-
-    /* Create the list which will hold the result */
+    /* Create the list which will hold the result. */
     mylist = PyList_New(0);
     if(mylist == NULL) {
-      res = NULL;
       goto free_buf_list;
     }
 
     nalloc = ESTIMATE_ATTR_SIZE;
-    if((buf_val = PyMem_Malloc(nalloc)) == NULL) {
-        Py_DECREF(mylist);
-        res = PyErr_NoMemory();
-        goto free_buf_list;
-    }
-
     /* Create and insert the attributes as strings in the list */
     for(s = buf_list; s - buf_list < nlist; s += strlen(s) + 1) {
         PyObject *my_tuple;
-        int missing;
         const char *name;
 
-        if((name=matches_ns(ns, s))==NULL)
+        if((name = matches_ns(ns, s)) == NULL)
             continue;
         /* Now retrieve the attribute value */
-        missing = 0;
-        while(1) {
-            nval_s = _get_obj(&tgt, s, buf_val, nalloc);
-
-            if(nval_s == -1) {
-                if(errno == ERANGE) {
-                    ssize_t realloc_size_s = _get_obj(&tgt, s, NULL, 0);
-                    /* ERANGE + proper size should not fail, but it
-                       still can, so let's check first */
-                    if(realloc_size_s == -1) {
-                      res = PyErr_SetFromErrno(PyExc_IOError);
-                      Py_DECREF(mylist);
-                      goto free_buf_val;
-                    }
-                    size_t realloc_size = (size_t) realloc_size_s;
-                    if((buf_val_tmp = PyMem_Realloc(buf_val, realloc_size))
-                       == NULL) {
-                        res = PyErr_NoMemory();
-                        Py_DECREF(mylist);
-                        goto free_buf_val;
-                    }
-                    buf_val = buf_val_tmp;
-                    nalloc = realloc_size;
-                    continue;
-                } else if(
+        nval = _generic_get(_get_obj, &tgt, s, &buf_val, &nalloc, &io_errno);
+        if (nval == -1) {
+          if (
 #ifdef ENODATA
-                          errno == ENODATA ||
+              io_errno == ENODATA ||
 #endif
-                          errno == ENOATTR) {
-                    /* this attribute has gone away since we queried
-                       the attribute list */
-                    missing = 1;
-                    break;
-                }
-                /* else we're dealing with a different error, which we
-                   don't know how to handle nicely, so we abort */
-                Py_DECREF(mylist);
-                res = PyErr_SetFromErrno(PyExc_IOError);
-                goto free_buf_val;
-            } else {
-              nval = (size_t) nval_s;
-            }
-            break;
-        }
-        if(missing)
+              io_errno == ENOATTR) {
+            PyErr_Clear();
             continue;
-#ifdef IS_PY3K
-        my_tuple = Py_BuildValue("yy#", name, buf_val, nval);
-#else
-        my_tuple = Py_BuildValue("ss#", name, buf_val, nval);
-#endif
+          } else {
+            Py_DECREF(mylist);
+            goto free_buf_val;
+          }
+        }
+        my_tuple = Py_BuildValue(BYTES_TUPLE, name, buf_val, nval);
         if (my_tuple == NULL) {
           Py_DECREF(mylist);
-          res = NULL;
           goto free_buf_val;
         }
         PyList_Append(mylist, my_tuple);
@@ -969,10 +978,10 @@ static char __pylistxattr_doc__[] =
 static PyObject *
 pylistxattr(PyObject *self, PyObject *args)
 {
-    char *buf;
-    int nofollow=0;
-    ssize_t nalloc_s, nret;
-    size_t nalloc;
+    char *buf = NULL;
+    int nofollow = 0;
+    ssize_t nret;
+    size_t nalloc = ESTIMATE_ATTR_SIZE;
     PyObject *myarg;
     PyObject *mylist;
     Py_ssize_t nattrs;
@@ -985,29 +994,10 @@ pylistxattr(PyObject *self, PyObject *args)
     if(convert_obj(myarg, &tgt, nofollow) < 0)
         return NULL;
 
-    /* Find out the needed size of the buffer */
-    if((nalloc_s = _list_obj(&tgt, NULL, 0)) == -1) {
-        mylist = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_tgt;
-    }
-
-    if(nalloc_s == 0) {
-        mylist = PyList_New(0);
-        goto free_tgt;
-    }
-
-    nalloc = (size_t) nalloc_s;
-
-    /* Try to allocate the memory, using Python's allocator */
-    if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        mylist = PyErr_NoMemory();
-        goto free_tgt;
-    }
-
-    /* Now retrieve the list of attributes */
-    if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
-        mylist = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_buf;
+    nret = _generic_get(_list_obj, &tgt, NULL, &buf, &nalloc, NULL);
+    if (nret == -1) {
+      mylist = NULL;
+      goto free_buf;
     }
 
     /* Compute the number of attributes in the list */
@@ -1017,8 +1007,9 @@ pylistxattr(PyObject *self, PyObject *args)
 
     /* Create the list which will hold the result */
     mylist = PyList_New(nattrs);
-    if(mylist == NULL)
+    if(mylist == NULL) {
       goto free_buf;
+    }
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
@@ -1035,8 +1026,6 @@ pylistxattr(PyObject *self, PyObject *args)
  free_buf:
     /* Free the buffer, now it is no longer needed */
     PyMem_Free(buf);
-
- free_tgt:
     free_tgt(&tgt);
 
     /* Return the result */
@@ -1072,10 +1061,10 @@ static char __list_doc__[] =
 static PyObject *
 xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
 {
-    char *buf;
+    char *buf = NULL;
     int nofollow = 0;
-    ssize_t nalloc_s, nret;
-    size_t nalloc;
+    ssize_t nret;
+    size_t nalloc = ESTIMATE_ATTR_SIZE;
     PyObject *myarg;
     PyObject *res;
     const char *ns = NULL;
@@ -1088,34 +1077,13 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
+    res = NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0) {
-        res = NULL;
         goto free_arg;
     }
-
-    /* Find out the needed size of the buffer */
-    if((nalloc_s = _list_obj(&tgt, NULL, 0)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_tgt;
-    }
-
-    if(nalloc_s == 0) {
-        res = PyList_New(0);
-        goto free_tgt;
-    }
-
-    nalloc = (size_t) nalloc_s;
-
-    /* Try to allocate the memory, using Python's allocator */
-    if((buf = PyMem_Malloc(nalloc)) == NULL) {
-        res = PyErr_NoMemory();
-        goto free_tgt;
-    }
-
-    /* Now retrieve the list of attributes */
-    if((nret = _list_obj(&tgt, buf, nalloc)) == -1) {
-        res = PyErr_SetFromErrno(PyExc_IOError);
-        goto free_buf;
+    nret = _generic_get(_list_obj, &tgt, NULL, &buf, &nalloc, NULL);
+    if (nret == -1) {
+      goto free_tgt;
     }
 
     /* Compute the number of attributes in the list */
@@ -1123,15 +1091,16 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
         if(matches_ns(ns, s) != NULL)
             nattrs++;
     }
+
     /* Create the list which will hold the result */
-    res = PyList_New(nattrs);
-    if(res == NULL)
+    if((res = PyList_New(nattrs)) == NULL) {
         goto free_buf;
+    }
 
     /* Create and insert the attributes as strings in the list */
     for(s = buf, nattrs = 0; s - buf < nret; s += strlen(s) + 1) {
         const char *name = matches_ns(ns, s);
-        if(name!=NULL) {
+        if(name != NULL) {
             PyObject *item = PyBytes_FromString(name);
             if(item == NULL) {
                 Py_DECREF(res);
