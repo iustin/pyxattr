@@ -34,10 +34,16 @@ test:
 	  pypy ./setup.py test -q; \
 	fi
 
+coverage:
+	$(MAKE) clean
+	$(MAKE) test CFLAGS="-coverage"
+	lcov --capture --directory . --output-file coverage.info
+	genhtml coverage.info --output-directory out
+
 clean:
 	rm -rf $(DOCHTML) $(DOCTREES)
 	rm -f $(MODNAME)
 	rm -f *.so
 	rm -rf build
 
-.PHONY: doc test clean dist
+.PHONY: doc test clean dist coverage

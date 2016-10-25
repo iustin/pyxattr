@@ -421,6 +421,9 @@ class xattrTest(unittest.TestCase):
         xattr.set(fh, self.USER_ATTR, self.EMPTY_VAL)
         self.assertEqual(xattr.get(fh, self.USER_ATTR), self.EMPTY_VAL)
 
+    def testWrongType(self):
+        self.assertRaises(TypeError, xattr.get, object(), self.USER_ATTR)
+
 
 if __name__ == "__main__":
     unittest.main()
