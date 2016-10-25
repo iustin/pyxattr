@@ -31,12 +31,14 @@ class xattrTest(unittest.TestCase):
     USER_NN = "test"
     USER_ATTR = NS_USER.decode() + "." + USER_NN
     USER_VAL = "abc"
+    EMPTY_VAL = ""
     MANYOPS_COUNT = 131072
 
     if PY3K:
         USER_NN = USER_NN.encode()
         USER_VAL = USER_VAL.encode()
         USER_ATTR = USER_ATTR.encode()
+        EMPTY_VAL = EMPTY_VAL.encode()
 
     @staticmethod
     def _ignore_tuples(attrs):
@@ -51,11 +53,11 @@ class xattrTest(unittest.TestCase):
                 if attr not in TEST_IGNORE_XATTRS]
 
     def checkList(self, attrs, value):
-        """Helper to check attribute list equivalence, skipping TEST_IGNORE_XATTRS."""
+        """Helper to check list equivalence, skipping TEST_IGNORE_XATTRS."""
         self.assertEqual(self._ignore(attrs), value)
 
     def checkTuples(self, attrs, value):
-        """Helper to check attribute list equivalence, skipping TEST_IGNORE_XATTRS."""
+        """Helper to check list equivalence, skipping TEST_IGNORE_XATTRS."""
         self.assertEqual(self._ignore_tuples(attrs), value)
 
     def setUp(self):
@@ -109,9 +111,11 @@ class xattrTest(unittest.TestCase):
             xattr.setxattr(item, self.USER_ATTR, self.USER_VAL, 0, symlink)
         except IOError:
             err = sys.exc_info()[1]
-            if symlink and (err.errno == errno.EPERM or err.errno == errno.ENOENT):
+            if symlink and (err.errno == errno.EPERM or
+                            err.errno == errno.ENOENT):
                 # symlinks may fail, in which case we abort the rest
-                # of the test for this case (Linux returns EPERM; OS X returns ENOENT)
+                # of the test for this case (Linux returns EPERM; OS X
+                # returns ENOENT)
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
@@ -146,9 +150,11 @@ class xattrTest(unittest.TestCase):
                           nofollow=symlink)
         except IOError:
             err = sys.exc_info()[1]
-            if symlink and (err.errno == errno.EPERM or err.errno == errno.ENOENT):
+            if symlink and (err.errno == errno.EPERM or
+                            err.errno == errno.ENOENT):
                 # symlinks may fail, in which case we abort the rest
-                # of the test for this case (Linux returns EPERM; OS X returns ENOENT)
+                # of the test for this case (Linux returns EPERM; OS X
+                # returns ENOENT)
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.set, item,
@@ -188,12 +194,19 @@ class xattrTest(unittest.TestCase):
         fh, fname = self._getfile()
         self.checkList(xattr.listxattr(fname), [])
         self.checkTuples(xattr.get_all(fname), [])
+        self.assertRaises(EnvironmentError, xattr.getxattr, fname,
+                              self.USER_ATTR)
         dname = self._getdir()
         self.checkList(xattr.listxattr(dname), [])
         self.checkTuples(xattr.get_all(dname), [])
+        self.assertRaises(EnvironmentError, xattr.getxattr, dname,
+                              self.USER_ATTR)
         _, sname = self._getsymlink()
         self.checkList(xattr.listxattr(sname, True), [])
         self.checkTuples(xattr.get_all(sname, nofollow=True), [])
+        self.assertRaises(EnvironmentError, xattr.getxattr, fname,
+                              self.USER_ATTR, True)
+
 
     def testNoXattr(self):
         """test no attributes"""
@@ -202,11 +215,15 @@ class xattrTest(unittest.TestCase):
         self.assertEqual(xattr.list(fname, namespace=NS_USER), [])
         self.checkTuples(xattr.get_all(fname), [])
         self.assertEqual(xattr.get_all(fname, namespace=NS_USER), [])
+        self.assertRaises(EnvironmentError, xattr.get, fname,
+                              self.USER_NN, namespace=NS_USER)
         dname = self._getdir()
         self.checkList(xattr.list(dname), [])
         self.assertEqual(xattr.list(dname, namespace=NS_USER), [])
         self.checkTuples(xattr.get_all(dname), [])
         self.assertEqual(xattr.get_all(dname, namespace=NS_USER), [])
+        self.assertRaises(EnvironmentError, xattr.get, dname,
+                              self.USER_NN, namespace=NS_USER)
         _, sname = self._getsymlink()
         self.checkList(xattr.list(sname, nofollow=True), [])
         self.assertEqual(xattr.list(sname, nofollow=True,
@@ -214,6 +231,8 @@ class xattrTest(unittest.TestCase):
         self.checkTuples(xattr.get_all(sname, nofollow=True), [])
         self.assertEqual(xattr.get_all(sname, nofollow=True,
                                            namespace=NS_USER), [])
+        self.assertRaises(EnvironmentError, xattr.get, sname,
+                              self.USER_NN, namespace=NS_USER, nofollow=True)
 
     def testFileByNameDeprecated(self):
         """test set and retrieve one attribute by file name (deprecated)"""
@@ -396,6 +415,11 @@ class xattrTest(unittest.TestCase):
         fh, fname = self._getfile()
         self.assertRaises(TypeError, xattr.get, fh, self.USER_ATTR,
                           namespace=None)
+
+    def testEmptyValue(self):
+        fh, fname = self._getfile()
+        xattr.set(fh, self.USER_ATTR, self.EMPTY_VAL)
+        self.assertEqual(xattr.get(fh, self.USER_ATTR), self.EMPTY_VAL)
 
 
 if __name__ == "__main__":
