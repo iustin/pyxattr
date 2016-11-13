@@ -24,10 +24,12 @@ dist:
 
 test:
 	@for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5; do \
-	  if type python$$ver >/dev/null; then \
-	    echo Testing with python$$ver; \
-	    python$$ver ./setup.py test -q; \
-	  fi; \
+	  for flavour in "" "-dbg"; do \
+	    if type python$$ver$$flavour >/dev/null; then \
+	      echo Testing with python$$ver$$flavour; \
+	      python$$ver$$flavour ./setup.py test -q; \
+	    fi; \
+	  done; \
 	done;
 	@if type pypy >/dev/null; then \
 	  echo Testing with pypy; \
