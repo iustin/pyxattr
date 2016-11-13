@@ -32,6 +32,7 @@ class xattrTest(unittest.TestCase):
     USER_ATTR = NS_USER.decode() + "." + USER_NN
     USER_VAL = "abc"
     EMPTY_VAL = ""
+    LARGE_VAL = "x" * 2048
     MANYOPS_COUNT = 131072
 
     if PY3K:
@@ -39,6 +40,7 @@ class xattrTest(unittest.TestCase):
         USER_VAL = USER_VAL.encode()
         USER_ATTR = USER_ATTR.encode()
         EMPTY_VAL = EMPTY_VAL.encode()
+        LARGE_VAL = LARGE_VAL.encode()
 
     @staticmethod
     def _ignore_tuples(attrs):
@@ -423,6 +425,12 @@ class xattrTest(unittest.TestCase):
 
     def testWrongType(self):
         self.assertRaises(TypeError, xattr.get, object(), self.USER_ATTR)
+
+    def testLargeAttribute(self):
+        fh, fname = self._getfile()
+
+        xattr.set(fh, self.USER_ATTR, self.LARGE_VAL)
+        self.assertEqual(xattr.get(fh, self.USER_ATTR), self.LARGE_VAL)
 
 
 if __name__ == "__main__":
