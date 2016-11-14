@@ -423,8 +423,24 @@ class xattrTest(unittest.TestCase):
         xattr.set(fh, self.USER_ATTR, self.EMPTY_VAL)
         self.assertEqual(xattr.get(fh, self.USER_ATTR), self.EMPTY_VAL)
 
+    def testWrongCall(self):
+       for call in [xattr.get,
+                    xattr.list, xattr.listxattr,
+                    xattr.remove, xattr.removexattr,
+                    xattr.set, xattr.setxattr,
+                    xattr.get, xattr.getxattr]:
+           self.assertRaises(TypeError, call)
+
     def testWrongType(self):
         self.assertRaises(TypeError, xattr.get, object(), self.USER_ATTR)
+        for call in [xattr.listxattr, xattr.list]:
+            self.assertRaises(TypeError, call, object())
+        for call in [xattr.remove, xattr.removexattr,
+                     xattr.get, xattr.getxattr]:
+            self.assertRaises(TypeError, call, object(), self.USER_ATTR)
+        for call in [xattr.set, xattr.setxattr]:
+            self.assertRaises(TypeError, call, object(), self.USER_ATTR, self.USER_VAL)
+
 
     def testLargeAttribute(self):
         fh, fname = self._getfile()
