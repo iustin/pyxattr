@@ -1,6 +1,27 @@
 News
 ====
 
+Version 0.6.0
+-------------
+
+*released Mon, 23 Jan 2017*
+
+Bugfix and feature release (hence the version bump).
+
+The main change is to the implementation of how attributes are listed
+and read. This was done due to existing race issues when attributes are
+modified while being read (github issue #12), but basically all various
+internal paths that dealt with retrieving an attribute value or listing
+attributes were unified in a single helper function that does handle
+such concurrent modifications. As a side effect, the size of the buffers
+used for such reads have changed, which (depending on attribute value)
+might change the trade-off between number of syscalls done and memory
+usage.
+
+As feature release, OSX support was contributed by Adam Knight
+<adam@movq.us>, thanks a lot! I don't have access to OSX so the testing
+for it is done via Travis builds; please report any issues.
+
 Version 0.5.6
 -------------
 
