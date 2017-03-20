@@ -235,7 +235,7 @@ static inline int _setxattr(const char *path, const char *name, const void *valu
     return setxattr(path, name, value, size, 0, flags);
 }
 static inline int _lsetxattr(const char *path, const char *name, const void *value, size_t size, int flags) {
-    return setxattr(path, name, value, size, 0, flags & XATTR_NOFOLLOW);
+    return setxattr(path, name, value, size, 0, flags | XATTR_NOFOLLOW);
 }
 static inline int _fsetxattr(int filedes, const char *name, const void *value, size_t size, int flags) {
     return fsetxattr(filedes, name, value, size, 0, flags);
