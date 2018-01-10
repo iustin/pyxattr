@@ -23,10 +23,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 #include <sys/xattr.h>
-#elif defined(__linux__)
-#include <attr/xattr.h>
 #endif
 #include <stdio.h>
 
@@ -642,11 +640,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         /* Now retrieve the attribute value */
         nval = _generic_get(_get_obj, &tgt, s, &buf_val, &nalloc, &io_errno);
         if (nval == -1) {
-          if (
-#ifdef ENODATA
-              io_errno == ENODATA ||
-#endif
-              io_errno == ENOATTR) {
+          if (io_errno == ENODATA) {
             PyErr_Clear();
             continue;
           } else {
@@ -1173,8 +1167,7 @@ static char __xattr_doc__[] = \
     "   a :exc:`EnvironmentError`; under\n"
     "   Linux, the following ``errno`` values are used:\n"
     "\n"
-    "   - ``ENOATTR`` and ``ENODATA`` mean that the attribute name is\n"
-    "     invalid\n"
+    "   - ``ENODATA`` means that the attribute name is\n invalid\n"
     "   - ``ENOTSUP`` and ``EOPNOTSUPP`` mean that the filesystem does not\n"
     "     support extended attributes, or that the namespace is invalid\n"
     "   - ``E2BIG`` mean that the attribute value is too big\n"
