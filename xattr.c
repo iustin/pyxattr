@@ -273,41 +273,58 @@ typedef ssize_t (*buf_getter)(target_t *tgt, const char *name,
 
 static ssize_t _list_obj(target_t *tgt, const char *unused, void *list,
                          size_t size) {
+    ssize_t ret;
+
+    Py_BEGIN_ALLOW_THREADS;
     if(tgt->type == T_FD)
-        return _flistxattr(tgt->fd, list, size);
+        ret = _flistxattr(tgt->fd, list, size);
     else if (tgt->type == T_LINK)
-        return _llistxattr(tgt->name, list, size);
+        ret = _llistxattr(tgt->name, list, size);
     else
-        return _listxattr(tgt->name, list, size);
+        ret = _listxattr(tgt->name, list, size);
+    Py_END_ALLOW_THREADS;
+    return ret;
 }
 
 static ssize_t _get_obj(target_t *tgt, const char *name, void *value,
                         size_t size) {
+    ssize_t ret;
+    Py_BEGIN_ALLOW_THREADS;
     if(tgt->type == T_FD)
-        return _fgetxattr(tgt->fd, name, value, size);
+        ret = _fgetxattr(tgt->fd, name, value, size);
     else if (tgt->type == T_LINK)
-        return _lgetxattr(tgt->name, name, value, size);
+        ret = _lgetxattr(tgt->name, name, value, size);
     else
-        return _getxattr(tgt->name, name, value, size);
+        ret = _getxattr(tgt->name, name, value, size);
+    Py_END_ALLOW_THREADS;
+    return ret;
 }
 
 static int _set_obj(target_t *tgt, const char *name,
                     const void *value, size_t size, int flags) {
+    int ret;
+    Py_BEGIN_ALLOW_THREADS;
     if(tgt->type == T_FD)
-        return _fsetxattr(tgt->fd, name, value, size, flags);
+        ret = _fsetxattr(tgt->fd, name, value, size, flags);
     else if (tgt->type == T_LINK)
-        return _lsetxattr(tgt->name, name, value, size, flags);
+        ret = _lsetxattr(tgt->name, name, value, size, flags);
     else
-        return _setxattr(tgt->name, name, value, size, flags);
+        ret = _setxattr(tgt->name, name, value, size, flags);
+    Py_END_ALLOW_THREADS;
+    return ret;
 }
 
 static int _remove_obj(target_t *tgt, const char *name) {
+    int ret;
+    Py_BEGIN_ALLOW_THREADS;
     if(tgt->type == T_FD)
-        return _fremovexattr(tgt->fd, name);
+        ret = _fremovexattr(tgt->fd, name);
     else if (tgt->type == T_LINK)
-        return _lremovexattr(tgt->name, name);
+        ret = _lremovexattr(tgt->name, name);
     else
-        return _removexattr(tgt->name, name);
+        ret = _removexattr(tgt->name, name);
+    Py_END_ALLOW_THREADS;
+    return ret;
 }
 
 /* Perform a get/list operation with appropriate buffer size,
