@@ -6,13 +6,22 @@ Version 0.6.1
 
 *released Tue, 24 Jul 2018*
 
-Minor compatibility fix: on Linux, drop the use of the `attr` library,
-and instead switch to the glibc header `sys/xattr.h`, which is provided
-for a really long time (since glibc 2.3). The formerly used header
-`attr/xattr.h` has been removed from the `attr` library in version
-2.4.48.
+Minor bugfix, performance and compatibility release.
 
-Fix provided by Lars Wendler, many thanks!
+* Minor compatibility fix: on Linux, drop the use of the `attr` library,
+  and instead switch to the glibc header `sys/xattr.h`, which is
+  provided for a really long time (since glibc 2.3). The formerly used
+  header `attr/xattr.h` has been removed from the `attr` library in
+  version 2.4.48. Fix provided by Lars Wendler, many thanks!
+* Release the GIL when performing I/O. Patch proposed by xwhuang, many
+  thanks. I tested this a long while back it seemed to impact
+  performance on local filesystems, but upon further inspection, the
+  downsides are minor (between 0 and 5%, in many cases negligible). For
+  remote or slow filesystems, this should allow much increased
+  parallelism.
+* Fix symlink set operation on MacOS X; bugfix provided by adamlin, much
+  appreciated! This also uncovered testing problems related to symlinks,
+  which are now fixed (the bug would be caught by the updated tests).
 
 Version 0.6.0
 -------------
