@@ -7,6 +7,7 @@ ALLSPHINXOPTS = -d $(DOCTREES) $(SPHINXOPTS) $(DOCDIR)
 
 MODNAME = xattr.so
 RSTFILES = doc/index.rst doc/module.rst NEWS README.rst doc/conf.py
+PYVERS = 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7
 
 all: doc test
 
@@ -23,7 +24,7 @@ dist:
 	fakeroot ./setup.py sdist
 
 test:
-	@for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5; do \
+	@for ver in $(PYVERS); do \
 	  for flavour in "" "-dbg"; do \
 	    if type python$$ver$$flavour >/dev/null; then \
 	      echo Testing with python$$ver$$flavour; \
@@ -40,7 +41,7 @@ benchmark: $(MODNAME)
 	@set -e; \
 	TESTFILE=`mktemp`;\
 	trap 'rm $$TESTFILE' EXIT; \
-	for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5; do \
+	for ver in $(PYVERS) ; do \
 	    if type python$$ver >/dev/null; then \
 	      echo Benchmarking with python$$ver; \
 	      python$$ver ./setup.py build -q; \
