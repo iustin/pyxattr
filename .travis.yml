@@ -18,12 +18,6 @@ script: python ./setup.py test
 # no need for sudo access, silence notice:
 sudo: false
 
-# but we do need a system library:
-addons:
-  apt:
-    packages:
-      - libattr1-dev
-
 # enable OSX support, with only system python:
 matrix:
     include:
