@@ -8,6 +8,7 @@ ALLSPHINXOPTS = -d $(DOCTREES) $(SPHINXOPTS) $(DOCDIR)
 MODNAME = xattr.so
 RSTFILES = doc/index.rst doc/module.rst NEWS README.rst doc/conf.py
 PYVERS = 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7
+REPS = 5
 
 all: doc test
 
@@ -46,13 +47,13 @@ benchmark: $(MODNAME)
 	      echo Benchmarking with python$$ver; \
 	      python$$ver ./setup.py build -q; \
 	      echo "  - set (with override)"; \
-	      python$$ver -m timeit -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello')"; \
+	      python$$ver -m timeit -r $(REPS) -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello')"; \
 	      echo "  - list"; \
-	      python$$ver -m timeit -s 'import xattr' "xattr.list('$$TESTFILE')"; \
+	      python$$ver -m timeit -r $(REPS) -s 'import xattr' "xattr.list('$$TESTFILE')"; \
 	      echo "  - get"; \
-	      python$$ver -m timeit -s 'import xattr' "xattr.get('$$TESTFILE', 'user.comment')"; \
+	      python$$ver -m timeit -r $(REPS) -s 'import xattr' "xattr.get('$$TESTFILE', 'user.comment')"; \
 	      echo "  - set + remove"; \
-	      python$$ver -m timeit -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello'); xattr.remove('$$TESTFILE', 'user.comment')"; \
+	      python$$ver -m timeit -r $(REPS) -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello'); xattr.remove('$$TESTFILE', 'user.comment')"; \
 	    fi; \
 	done;
 
