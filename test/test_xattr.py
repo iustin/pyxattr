@@ -110,7 +110,7 @@ class xattrTest(unittest.TestCase):
         self.checkList(xattr.listxattr(item, symlink), [])
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
                           self.USER_ATTR, self.USER_VAL,
-                          XATTR_REPLACE)
+                          XATTR_REPLACE, symlink)
         try:
             xattr.setxattr(item, self.USER_ATTR, self.USER_VAL, 0, symlink)
         except IOError:
@@ -123,18 +123,18 @@ class xattrTest(unittest.TestCase):
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
-                          self.USER_ATTR, self.USER_VAL, XATTR_CREATE)
+                          self.USER_ATTR, self.USER_VAL, XATTR_CREATE, symlink)
         self.checkList(xattr.listxattr(item, symlink), [self.USER_ATTR])
         self.assertEqual(xattr.getxattr(item, self.USER_ATTR, symlink),
                          self.USER_VAL)
         self.checkTuples(xattr.get_all(item, nofollow=symlink),
                           [(self.USER_ATTR, self.USER_VAL)])
-        xattr.removexattr(item, self.USER_ATTR)
+        xattr.removexattr(item, self.USER_ATTR, symlink)
         self.checkList(xattr.listxattr(item, symlink), [])
         self.checkTuples(xattr.get_all(item, nofollow=symlink),
                          [])
         self.assertRaises(EnvironmentError, xattr.removexattr,
-                          item, self.USER_ATTR)
+                          item, self.USER_ATTR, symlink)
 
     def _checkListSetGet(self, item, symlink=False, use_ns=False):
         """check list, set, get operations against an item"""
