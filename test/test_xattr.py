@@ -140,10 +140,14 @@ class xattrTest(unittest.TestCase):
         """check list, set, get operations against an item"""
         self.checkList(xattr.list(item, symlink), [])
         self.assertRaises(EnvironmentError, xattr.set, item,
-                          self.USER_ATTR, self.USER_VAL, flags=XATTR_REPLACE)
+                          self.USER_ATTR, self.USER_VAL,
+                          flags=XATTR_REPLACE,
+                          nofollow=symlink)
         self.assertRaises(EnvironmentError, xattr.set, item,
-                          self.USER_NN, self.USER_VAL, flags=XATTR_REPLACE,
-                          namespace=NAMESPACE)
+                          self.USER_NN, self.USER_VAL,
+                          flags=XATTR_REPLACE,
+                          namespace=NAMESPACE,
+                          nofollow=symlink)
         try:
             if use_ns:
                 xattr.set(item, self.USER_NN, self.USER_VAL,
@@ -162,14 +166,18 @@ class xattrTest(unittest.TestCase):
                 return
             raise
         self.assertRaises(EnvironmentError, xattr.set, item,
-                          self.USER_ATTR, self.USER_VAL, flags=XATTR_CREATE)
+                          self.USER_ATTR, self.USER_VAL,
+                          flags=XATTR_CREATE,
+                          nofollow=symlink)
         self.assertRaises(EnvironmentError, xattr.set, item,
                           self.USER_NN, self.USER_VAL,
-                          flags=XATTR_CREATE, namespace=NAMESPACE)
+                          flags=XATTR_CREATE,
+                          namespace=NAMESPACE,
+                          nofollow=symlink)
         self.checkList(xattr.list(item, nofollow=symlink), [self.USER_ATTR])
         self.checkList(xattr.list(item, nofollow=symlink,
-                                   namespace=EMPTY_NS),
-                         [self.USER_ATTR])
+                                  namespace=EMPTY_NS),
+                       [self.USER_ATTR])
         self.assertEqual(xattr.list(item, namespace=NAMESPACE, nofollow=symlink),
                          [self.USER_NN])
         self.assertEqual(xattr.get(item, self.USER_ATTR, nofollow=symlink),
@@ -182,10 +190,10 @@ class xattrTest(unittest.TestCase):
                                        namespace=NAMESPACE),
                          [(self.USER_NN, self.USER_VAL)])
         if use_ns:
-            xattr.remove(item, self.USER_NN, namespace=NAMESPACE)
+            xattr.remove(item, self.USER_NN, namespace=NAMESPACE, nofollow=symlink)
         else:
-            xattr.remove(item, self.USER_ATTR)
-        self.checkList(xattr.list(item, symlink), [])
+            xattr.remove(item, self.USER_ATTR, nofollow=symlink)
+        self.checkList(xattr.list(item, nofollow=symlink), [])
         self.checkTuples(xattr.get_all(item, nofollow=symlink),
                          [])
         self.assertRaises(EnvironmentError, xattr.remove,
