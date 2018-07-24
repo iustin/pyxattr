@@ -36,6 +36,25 @@ test:
 	  pypy ./setup.py test -q; \
 	fi
 
+benchmark: $(MODNAME)
+	@set -e; \
+	TESTFILE=`mktemp`;\
+	trap 'rm $$TESTFILE' EXIT; \
+	for ver in 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5; do \
+	    if type python$$ver >/dev/null; then \
+	      echo Benchmarking with python$$ver; \
+	      python$$ver ./setup.py build -q; \
+	      echo "  - set (with override)"; \
+	      python$$ver -m timeit -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello')"; \
+	      echo "  - list"; \
+	      python$$ver -m timeit -s 'import xattr' "xattr.list('$$TESTFILE')"; \
+	      echo "  - get"; \
+	      python$$ver -m timeit -s 'import xattr' "xattr.get('$$TESTFILE', 'user.comment')"; \
+	      echo "  - set + remove"; \
+	      python$$ver -m timeit -s 'import xattr' "xattr.set('$$TESTFILE', 'user.comment', 'hello'); xattr.remove('$$TESTFILE', 'user.comment')"; \
+	    fi; \
+	done;
+
 coverage:
 	$(MAKE) clean
 	$(MAKE) test CFLAGS="-coverage"
