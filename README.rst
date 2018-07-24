@@ -17,9 +17,8 @@ pyxattr has been written and tested on Linux, kernel v2.4 or later, with
 XFS filesystems; ext2/ext3 should work also. If any other platform
 implements the same behavior, pyxattr could be used.
 
-You need to have the attr library (including development headers; most
-distributions should have this, under various names) and setuptools
-installed in order to build and install the module.
+You need to have the setuptools tool installed in order to build and
+install the module.
 
 License
 -------

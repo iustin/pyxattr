@@ -14,8 +14,6 @@ version = "0.6.0"
 author = "Iustin Pop"
 author_email = "iustin@k1024.org"
 libraries = []
-if platform.system() == 'Linux':
-    libraries.append("attr")
 macros = [
     ("_XATTR_VERSION", '"%s"' % version),
     ("_XATTR_AUTHOR", '"%s"' % author),
