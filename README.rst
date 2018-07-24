@@ -5,8 +5,8 @@ This is the pyxattr module, a Python extension module which gives access
 to the extended attributes for filesystem objects available in some
 operating systems.
 
-Downloads: go to http://pyxattr.k1024.org/downloads/. Latest
-version is 0.6.0. The source repository is either at
+Downloads: go to https://pyxattr.k1024.org/downloads/. Latest
+version is 0.6.1. The source repository is either at
 http://git.k1024.org/pyxattr.git or at
 https://github.com/iustin/pyxattr.
 

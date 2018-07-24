@@ -1,6 +1,19 @@
 News
 ====
 
+Version 0.6.1
+-------------
+
+*released Tue, 24 Jul 2018*
+
+Minor compatibility fix: on Linux, drop the use of the `attr` library,
+and instead switch to the glibc header `sys/xattr.h`, which is provided
+for a really long time (since glibc 2.3). The formerly used header
+`attr/xattr.h` has been removed from the `attr` library in version
+2.4.48.
+
+Fix provided by Lars Wendler, many thanks!
+
 Version 0.6.0
 -------------
 
