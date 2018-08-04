@@ -98,8 +98,8 @@ typedef int Py_ssize_t;
 #define ESTIMATE_ATTR_SIZE 256
 
 /* workaround for compiler error in get_all() for undefined ENOATTR */
-#ifundef ENOATTR
-#define  ENOATTR ENODATA
+#if !defined(ENOATTR)
+#define      ENOATTR ENODATA
 #endif
 
 typedef enum {T_FD, T_PATH, T_LINK} target_e;
