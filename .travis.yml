@@ -16,9 +16,6 @@ install: true
 # the test command:
 script: python ./setup.py test
 
-# no need for sudo access, silence notice:
-sudo: false
-
 # enable OSX support, with only system python:
 matrix:
     include:
