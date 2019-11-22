@@ -8,15 +8,44 @@ python:
     - "3.6"
     - "nightly"
 
-# we don't need any python dependencies:
-install: true
+# enable OSX support, with only system Python, and newer Python on Linux:
+matrix:
+  include:
+    - os: osx
+      # specify a reasonably newer xcode so that brew works
+      osx_image: xcode11
+      language: generic
+      python:
+  include:
+    - python: "3.7"
+      dist: xenial
+
+# install coverage helper:
+install: gem install coveralls-lcov
 
 # the test command:
-script: python ./setup.py test
+script:
+  - python ./setup.py test
+  - make clean
+  - CFLAGS="-coverage" python ./setup.py test
 
-# enable OSX support, with only system python:
-matrix:
-    include:
-        - os: osx
-          language: generic
-          python:
+# install lcov, platform-specific but clean:
+addons:
+  apt:
+    packages:
+      - lcov
+  homebrew:
+    packages:
+      - lcov
+
+# coverage settings from here:
+env:
+  - COVERALLS_PARALLEL=true
+
+after_success:
+  - lcov --capture --no-external --directory . --output-file coverage.info
+  - coveralls-lcov coverage.info
+
+notifications:
+  webhooks: https://coveralls.io/webhook
+
