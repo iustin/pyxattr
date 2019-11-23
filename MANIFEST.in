@@ -1,9 +1,10 @@
 include COPYING
 include NEWS
-include README.rst
+include README.md
 include Makefile
 include doc/conf.py
-include doc/*.rst
+include doc/index.rst
+include doc/module.rst
 include setup.cfg
 include test/test_xattr.py
 include test/__init__.py

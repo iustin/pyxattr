@@ -7,7 +7,7 @@ DOCTREES      = $(DOCDIR)/doctrees
 ALLSPHINXOPTS = -d $(DOCTREES) $(SPHINXOPTS) $(DOCDIR)
 
 MODNAME = xattr.so
-RSTFILES = doc/index.rst doc/module.rst NEWS README.rst doc/conf.py
+RSTFILES = doc/index.rst doc/module.rst doc/news.rst doc/readme.md doc/conf.py
 PYVERS = 2.4 2.5 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7
 REPS = 5
 
@@ -21,6 +21,12 @@ $(DOCHTML)/index.html: $(MODNAME) $(RSTFILES)
 	touch $@
 
 doc: $(DOCHTML)/index.html
+
+doc/readme.md: README.md
+	ln -s ../README.md doc/readme.md
+
+doc/news.rst: NEWS
+	ln -s ../NEWS doc/news.rst
 
 dist:
 	fakeroot $(PYTHON) ./setup.py sdist
@@ -66,6 +72,7 @@ coverage:
 
 clean:
 	rm -rf $(DOCHTML) $(DOCTREES)
+	rm -f doc/readme.md doc/news.rst
 	rm -f $(MODNAME)
 	rm -f *.so
 	rm -rf build

@@ -2,8 +2,8 @@
  Welcome to pyxattr's documentation!
 ======================================
 
-.. include:: ../README.rst
-   :start-line: 2
+See the :doc:`README <readme>` for start, or the detailed :doc:`module
+<module>` information.
 
 Contents
 --------
@@ -11,6 +11,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   readme.md
    module.rst
    news.rst
 
