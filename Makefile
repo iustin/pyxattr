@@ -5,6 +5,9 @@ DOCDIR        = doc
 DOCHTML       = $(DOCDIR)/html
 DOCTREES      = $(DOCDIR)/doctrees
 ALLSPHINXOPTS = -d $(DOCTREES) $(SPHINXOPTS) $(DOCDIR)
+VERSION       = 0.6.1
+FULLVER       = pyxattr-$(VERSION)
+DISTFILE      = $(FULLVER).tar.gz
 
 MODNAME = xattr.so
 RSTFILES = doc/index.rst doc/module.rst doc/news.rst doc/readme.md doc/conf.py
@@ -30,6 +33,14 @@ doc/news.rst: NEWS
 
 dist:
 	fakeroot $(PYTHON) ./setup.py sdist
+
+distcheck: dist
+	set -e; \
+	TDIR=$$(mktemp -d) && \
+	trap "rm -rf $$TDIR" EXIT; \
+	tar xzf dist/$(DISTFILE) -C $$TDIR && \
+	(cd $$TDIR/$(FULLVER) && make doc && make test && make dist) && \
+	echo "All good, you can upload $(DISTFILE)!"
 
 test:
 	@for ver in $(PYVERS); do \
@@ -77,4 +88,4 @@ clean:
 	rm -f *.so
 	rm -rf build
 
-.PHONY: doc test clean dist coverage
+.PHONY: doc test clean dist distcheck coverage
