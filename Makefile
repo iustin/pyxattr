@@ -1,5 +1,6 @@
+PYTHON        = python3
 SPHINXOPTS    = -W
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = $(PYTHON) -m sphinx
 DOCDIR        = doc
 DOCHTML       = $(DOCDIR)/html
 DOCTREES      = $(DOCDIR)/doctrees
@@ -13,7 +14,7 @@ REPS = 5
 all: doc test
 
 $(MODNAME): xattr.c
-	./setup.py build_ext --inplace
+	$(PYTHON) ./setup.py build_ext --inplace
 
 $(DOCHTML)/index.html: $(MODNAME) $(RSTFILES)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCHTML)
@@ -22,7 +23,7 @@ $(DOCHTML)/index.html: $(MODNAME) $(RSTFILES)
 doc: $(DOCHTML)/index.html
 
 dist:
-	fakeroot ./setup.py sdist
+	fakeroot $(PYTHON) ./setup.py sdist
 
 test:
 	@for ver in $(PYVERS); do \
