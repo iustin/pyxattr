@@ -1184,7 +1184,7 @@ static char __xattr_doc__[] = \
     "   a :exc:`EnvironmentError`; under\n"
     "   Linux, the following ``errno`` values are used:\n"
     "\n"
-    "   - ``ENODATA`` means that the attribute name is\n invalid\n"
+    "   - ``ENODATA`` means that the attribute name is invalid\n"
     "   - ``ENOTSUP`` and ``EOPNOTSUPP`` mean that the filesystem does not\n"
     "     support extended attributes, or that the namespace is invalid\n"
     "   - ``E2BIG`` mean that the attribute value is too big\n"
