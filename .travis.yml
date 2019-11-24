@@ -40,13 +40,9 @@ addons:
     packages:
       - lcov
 
-# coverage settings from here:
-env:
-  - COVERALLS_PARALLEL=true
-
 after_success:
   - lcov --capture --no-external --directory . --output-file coverage.info
-  - coveralls-lcov coverage.info
+  - COVERALLS_PARALLEL=true coveralls-lcov coverage.info
   - pip install codecov
   - codecov
 
