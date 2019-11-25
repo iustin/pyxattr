@@ -25,6 +25,7 @@ python:
 install:
   - gem install coveralls-lcov
   - pip install pytest
+  - pip install codecov
 
 # the test command:
 script:
@@ -46,7 +47,6 @@ addons:
 after_success:
   - lcov --capture --no-external --directory . --output-file coverage.info
   - COVERALLS_PARALLEL=true coveralls-lcov coverage.info
-  - pip install codecov
   - codecov
 
 notifications:
