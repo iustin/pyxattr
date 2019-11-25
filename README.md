@@ -23,8 +23,10 @@ repository is either at <http://git.k1024.org/pyxattr.git> or at
 
 ## Requirements
 
-pyxattr has been written and tested on Linux, kernel v2.4 or later,
-with XFS and ext2/ext3/ext3 file systems. If any other platform
+The current supported Python versions are 3.4+.
+
+The library has been written and tested on Linux, kernel v2.4 or
+later, with XFS and ext2/ext3/ext3 file systems. If any other platform
 implements the same behaviour, pyxattr could be used.
 
 You need to have the setuptools tool installed in order to build and

@@ -35,4 +35,5 @@ setup(name = "pyxattr",
                                )],
       test_suite = "test",
       platforms = ["Linux"],
+      python_requires = ">=3.4",
       )

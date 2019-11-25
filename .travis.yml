@@ -2,7 +2,6 @@ language: python
 
 # let's test as many versions as we can!
 python:
-    - "2.7"
     - "3.4"
     - "3.5"
     - "3.6"
