@@ -12,12 +12,7 @@ from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
 
 NAMESPACE = os.environ.get("NAMESPACE", NS_USER)
 
-if sys.hexversion >= 0x03000000:
-    PY3K = True
-    EMPTY_NS = bytes()
-else:
-    PY3K = False
-    EMPTY_NS = ''
+EMPTY_NS = bytes()
 
 TEST_DIR = os.environ.get("TEST_DIR", ".")
 TEST_IGNORE_XATTRS = os.environ.get("TEST_IGNORE_XATTRS", "")
@@ -36,12 +31,11 @@ EMPTY_VAL = ""
 LARGE_VAL = "x" * 2048
 MANYOPS_COUNT = 16384
 
-if PY3K:
-    USER_NN = USER_NN.encode()
-    USER_VAL = USER_VAL.encode()
-    USER_ATTR = USER_ATTR.encode()
-    EMPTY_VAL = EMPTY_VAL.encode()
-    LARGE_VAL = LARGE_VAL.encode()
+USER_NN = USER_NN.encode()
+USER_VAL = USER_VAL.encode()
+USER_ATTR = USER_ATTR.encode()
+EMPTY_VAL = EMPTY_VAL.encode()
+LARGE_VAL = LARGE_VAL.encode()
 
 # Helper functions
 
