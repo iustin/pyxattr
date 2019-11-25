@@ -34,7 +34,7 @@ USER_ATTR = NAMESPACE.decode() + "." + USER_NN
 USER_VAL = "abc"
 EMPTY_VAL = ""
 LARGE_VAL = "x" * 2048
-MANYOPS_COUNT = 131072
+MANYOPS_COUNT = 16384
 
 if PY3K:
     USER_NN = USER_NN.encode()
