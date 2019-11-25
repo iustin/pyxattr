@@ -58,6 +58,10 @@ test:
 	  pypy3 -m pytest test; \
 	fi
 
+fast-test:
+	python3 setup.py build_ext -i
+	python3 -m pytest test -v
+
 benchmark: $(MODNAME)
 	@set -e; \
 	TESTFILE=`mktemp`;\
@@ -90,4 +94,4 @@ clean:
 	rm -f *.so
 	rm -rf build
 
-.PHONY: doc test clean dist distcheck coverage
+.PHONY: doc test fast-test clean dist distcheck coverage
