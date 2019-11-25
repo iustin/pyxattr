@@ -236,23 +236,38 @@ def test_ListSetGet(subject, use_ns):
         else:
             xattr.remove(item, USER_ATTR)
 
-def test_ListSetGetDeprecated(subject):
-    """check deprecated list, set, get operations against an item"""
+
+def test_replace_on_missing_deprecated(subject):
     item = subject[0]
     lists_equal(xattr.listxattr(item), [])
     with pytest.raises(EnvironmentError):
         xattr.setxattr(item, USER_ATTR, USER_VAL, XATTR_REPLACE)
+
+def test_create_on_existing_deprecated(subject):
+    item = subject[0]
+    lists_equal(xattr.listxattr(item), [])
     xattr.setxattr(item, USER_ATTR, USER_VAL, 0)
     with pytest.raises(EnvironmentError):
         xattr.setxattr(item, USER_ATTR, USER_VAL, XATTR_CREATE)
+
+def test_remove_on_missing_deprecated(subject):
+    """check deprecated list, set, get operations against an item"""
+    item = subject[0]
+    lists_equal(xattr.listxattr(item), [])
+    with pytest.raises(EnvironmentError):
+        xattr.removexattr(item, USER_ATTR)
+
+def test_set_get_remove_deprecated(subject):
+    """check deprecated list, set, get operations against an item"""
+    item = subject[0]
+    lists_equal(xattr.listxattr(item), [])
+    xattr.setxattr(item, USER_ATTR, USER_VAL, 0)
     lists_equal(xattr.listxattr(item), [USER_ATTR])
     assert xattr.getxattr(item, USER_ATTR) == USER_VAL
     tuples_equal(xattr.get_all(item), [(USER_ATTR, USER_VAL)])
     xattr.removexattr(item, USER_ATTR)
     lists_equal(xattr.listxattr(item), [])
     tuples_equal(xattr.get_all(item), [])
-    with pytest.raises(EnvironmentError):
-        xattr.removexattr(item, USER_ATTR)
 
 def test_many_ops(subject):
     """test many ops"""
