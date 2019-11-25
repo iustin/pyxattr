@@ -206,14 +206,15 @@ def test_create_on_existing(subject, use_ns):
         else:
             xattr.set(item, USER_ATTR, USER_VAL, flags=XATTR_CREATE)
 
-def test_remove_on_missing(subject, use_ns):
-    item = subject[0]
-    lists_equal(xattr.list(item), [])
+def test_remove_on_missing(any_subject, use_ns):
+    item, nofollow = any_subject
+    lists_equal(xattr.list(item, nofollow=nofollow), [])
     with pytest.raises(EnvironmentError):
         if use_ns:
-            xattr.remove(item, USER_NN, namespace=NAMESPACE)
+            xattr.remove(item, USER_NN, namespace=NAMESPACE,
+                         nofollow=nofollow)
         else:
-            xattr.remove(item, USER_ATTR)
+            xattr.remove(item, USER_ATTR, nofollow=nofollow)
 
 def test_set_get_remove(subject, use_ns):
     item = subject[0]
@@ -259,10 +260,10 @@ def test_create_on_existing_deprecated(subject):
     with pytest.raises(EnvironmentError):
         xattr.setxattr(item, USER_ATTR, USER_VAL, XATTR_CREATE)
 
-def test_remove_on_missing_deprecated(subject):
+def test_remove_on_missing_deprecated(any_subject):
     """check deprecated list, set, get operations against an item"""
-    item = subject[0]
-    lists_equal(xattr.listxattr(item), [])
+    item, nofollow = any_subject
+    lists_equal(xattr.listxattr(item, nofollow), [])
     with pytest.raises(EnvironmentError):
         xattr.removexattr(item, USER_ATTR)
 
