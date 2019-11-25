@@ -110,17 +110,7 @@ class xattrTest(unittest.TestCase):
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
                           USER_ATTR, USER_VAL,
                           XATTR_REPLACE, symlink)
-        try:
-            xattr.setxattr(item, USER_ATTR, USER_VAL, 0, symlink)
-        except IOError:
-            err = sys.exc_info()[1]
-            if symlink and (err.errno == errno.EPERM or
-                            err.errno == errno.ENOENT):
-                # symlinks may fail, in which case we abort the rest
-                # of the test for this case (Linux returns EPERM; OS X
-                # returns ENOENT)
-                return
-            raise
+        xattr.setxattr(item, USER_ATTR, USER_VAL, 0, symlink)
         self.assertRaises(EnvironmentError, xattr.setxattr, item,
                           USER_ATTR, USER_VAL, XATTR_CREATE, symlink)
         lists_equal(xattr.listxattr(item, symlink), [USER_ATTR])
@@ -147,23 +137,13 @@ class xattrTest(unittest.TestCase):
                           flags=XATTR_REPLACE,
                           namespace=NAMESPACE,
                           nofollow=symlink)
-        try:
-            if use_ns:
-                xattr.set(item, USER_NN, USER_VAL,
-                          namespace=NAMESPACE,
-                          nofollow=symlink)
-            else:
-                xattr.set(item, USER_ATTR, USER_VAL,
-                          nofollow=symlink)
-        except IOError:
-            err = sys.exc_info()[1]
-            if symlink and (err.errno == errno.EPERM or
-                            err.errno == errno.ENOENT):
-                # symlinks may fail, in which case we abort the rest
-                # of the test for this case (Linux returns EPERM; OS X
-                # returns ENOENT)
-                return
-            raise
+        if use_ns:
+            xattr.set(item, USER_NN, USER_VAL,
+                      namespace=NAMESPACE,
+                      nofollow=symlink)
+        else:
+            xattr.set(item, USER_ATTR, USER_VAL,
+                      nofollow=symlink)
         self.assertRaises(EnvironmentError, xattr.set, item,
                           USER_ATTR, USER_VAL,
                           flags=XATTR_CREATE,
@@ -330,33 +310,6 @@ class xattrTest(unittest.TestCase):
         dname = self._getdir()
         self._checkListSetGet(dname)
         self._checkListSetGet(dname, use_ns=True)
-
-    def testSymlinkOpsDeprecated(self):
-        """test symlink operations (deprecated functions)"""
-        _, sname = self._getsymlink()
-        self.assertRaises(EnvironmentError, xattr.listxattr, sname)
-        self._checkDeprecated(sname, symlink=True)
-        target, sname = self._getsymlink(dangling=False)
-        xattr.setxattr(target, USER_ATTR, USER_VAL)
-        lists_equal(xattr.listxattr(target), [USER_ATTR])
-        lists_equal(xattr.listxattr(sname, True), [])
-        self.assertRaises(EnvironmentError, xattr.removexattr, sname,
-                          USER_ATTR, True)
-        xattr.removexattr(sname, USER_ATTR, False)
-
-    def testSymlinkOps(self):
-        """test symlink operations"""
-        _, sname = self._getsymlink()
-        self.assertRaises(EnvironmentError, xattr.list, sname)
-        self._checkListSetGet(sname, symlink=True)
-        self._checkListSetGet(sname, symlink=True, use_ns=True)
-        target, sname = self._getsymlink(dangling=False)
-        xattr.set(target, USER_ATTR, USER_VAL)
-        lists_equal(xattr.list(target), [USER_ATTR])
-        lists_equal(xattr.list(sname, nofollow=True), [])
-        self.assertRaises(EnvironmentError, xattr.remove, sname,
-                          USER_ATTR, nofollow=True)
-        xattr.remove(sname, USER_ATTR, nofollow=False)
 
     def testBinaryPayloadDeprecated(self):
         """test binary values (deprecated functions)"""
