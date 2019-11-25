@@ -28,26 +28,6 @@
 #endif
 #include <stdio.h>
 
-/* Compatibility with python 2.4 regarding python size type (PEP 353) */
-#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
-typedef int Py_ssize_t;
-#define PY_SSIZE_T_MAX INT_MAX
-#define PY_SSIZE_T_MIN INT_MIN
-#endif
-
-#if PY_MAJOR_VERSION >= 3
-#define IS_PY3K
-#define BYTES_CHAR "y"
-#define BYTES_TUPLE "yy#"
-#else
-#define BYTES_CHAR "s"
-#define BYTES_TUPLE "ss#"
-#define PyBytes_Check PyString_Check
-#define PyBytes_AS_STRING PyString_AS_STRING
-#define PyBytes_FromStringAndSize PyString_FromStringAndSize
-#define PyBytes_FromString PyString_FromString
-#endif
-
 #define ITEM_DOC \
     ":param item: a string representing a file-name, or a file-like\n" \
     "    object, or a file descriptor; this represents the file on \n" \
@@ -158,11 +138,7 @@ static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow) {
         tgt->tmp = \
             PyUnicode_AsEncodedString(myobj,
                                       Py_FileSystemDefaultEncoding,
-#ifdef IS_PY3K
                                       "surrogateescape"
-#else
-                                      "strict"
-#endif
                                       );
         if(tgt->tmp == NULL)
             return -1;
@@ -537,7 +513,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iy", kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
     res = NULL;
@@ -624,7 +600,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     int io_errno;
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iy", kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
     if(convert_obj(myarg, &tgt, nofollow) < 0)
@@ -665,7 +641,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
             goto free_buf_val;
           }
         }
-        my_tuple = Py_BuildValue(BYTES_TUPLE, name, buf_val, nval);
+        my_tuple = Py_BuildValue("yy#", name, buf_val, nval);
         if (my_tuple == NULL) {
           Py_DECREF(mylist);
           goto free_buf_val;
@@ -807,7 +783,7 @@ xattr_set(PyObject *self, PyObject *args, PyObject *keywds)
                              "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|ii" BYTES_CHAR,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oetet#|iiy",
                                      kwlist, &myarg, NULL, &attrname, NULL,
                                      &buf, &bufsize_s, &flags, &nofollow, &ns))
         return NULL;
@@ -938,7 +914,7 @@ xattr_remove(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|i" BYTES_CHAR, kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Oet|iy", kwlist,
                                      &myarg, NULL, &attrname, &nofollow, &ns))
         return NULL;
 
@@ -1085,7 +1061,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     static char *kwlist[] = {"item", "nofollow", "namespace", NULL};
 
     /* Parse the arguments */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|i" BYTES_CHAR, kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iy", kwlist,
                                      &myarg, &nofollow, &ns))
         return NULL;
     res = NULL;
@@ -1197,8 +1173,6 @@ static char __xattr_doc__[] = \
     "\n"
     ;
 
-#ifdef IS_PY3K
-
 static struct PyModuleDef xattrmodule = {
     PyModuleDef_HEAD_INIT,
     "xattr",
@@ -1212,23 +1186,14 @@ static struct PyModuleDef xattrmodule = {
 PyMODINIT_FUNC
 PyInit_xattr(void)
 
-#else
-#define INITERROR return
-void
-initxattr(void)
-#endif
 {
     PyObject *ns_security = NULL;
     PyObject *ns_system   = NULL;
     PyObject *ns_trusted  = NULL;
     PyObject *ns_user     = NULL;
-#ifdef IS_PY3K
     PyObject *m = PyModule_Create(&xattrmodule);
-#else
-    PyObject *m = Py_InitModule3("xattr", xattr_methods, __xattr_doc__);
-#endif
     if (m==NULL)
-        INITERROR;
+        return NULL;
 
     PyModule_AddStringConstant(m, "__author__", _XATTR_AUTHOR);
     PyModule_AddStringConstant(m, "__contact__", _XATTR_EMAIL);
@@ -1262,11 +1227,7 @@ initxattr(void)
         goto err_out;
     ns_user = NULL;
 
-#ifdef IS_PY3K
     return m;
-#else
-    return;
-#endif
 
  err_out:
     Py_XDECREF(ns_user);
