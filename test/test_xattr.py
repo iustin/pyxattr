@@ -343,6 +343,16 @@ def test_binary_payload(subject):
     assert xattr.get_all(item, namespace=NAMESPACE) == [(USER_NN, BINVAL)]
     xattr.remove(item, USER_ATTR)
 
+def test_symlinks_user_fail(testdir, use_dangling):
+    _, sname = get_symlink(testdir, dangling=use_dangling)
+    with pytest.raises(IOError):
+        xattr.set(sname, USER_ATTR, USER_VAL, nofollow=True)
+    with pytest.raises(IOError):
+        xattr.set(sname, USER_NN, USER_VAL, namespace=NAMESPACE,
+                  nofollow=True)
+    with pytest.raises(IOError):
+        xattr.setxattr(sname, USER_ATTR, USER_VAL, XATTR_CREATE, True)
+
 def test_none_namespace(subject):
     with pytest.raises(TypeError):
         xattr.get(subject[0], USER_ATTR, namespace=None)
