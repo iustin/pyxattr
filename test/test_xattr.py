@@ -114,8 +114,6 @@ ITEMS_P = [
     (get_file_object, False),
     (get_dir, False),
     (get_valid_symlink, False),
-#    (get_valid_symlink, True),
-#    (get_dangling_symlink, True),
 ]
 
 ITEMS_D = [
@@ -124,12 +122,18 @@ ITEMS_D = [
     "file object",
     "directory",
     "file via symlink",
-#    "valid symlink",
-#    "dangling symlink",
 ]
+
+ALL_ITEMS_P = ITEMS_P + [ (get_valid_symlink, True),
+                          (get_dangling_symlink, True)]
+ALL_ITEMS_D = ITEMS_D + ["valid symlink", "dangling symlink"]
 
 @pytest.fixture(params=ITEMS_P, ids=ITEMS_D)
 def subject(testdir, request):
+    return request.param[0](testdir), request.param[1]
+
+@pytest.fixture(params=ALL_ITEMS_P, ids=ALL_ITEMS_D)
+def any_subject(testdir, request):
     return request.param[0](testdir), request.param[1]
 
 @pytest.fixture(params=[True, False], ids=["with namespace", "no namespace"])
@@ -282,43 +286,26 @@ def test_many_ops_deprecated(subject):
         tuples_equal(xattr.get_all(item),
                      [(USER_ATTR, USER_VAL)])
 
-def test_no_attributes_deprecated(subject):
+def test_no_attributes_deprecated(any_subject):
     """test no attributes (deprecated functions)"""
-    item = subject[0]
-    lists_equal(xattr.listxattr(item), [])
-    tuples_equal(xattr.get_all(item), [])
+    item, nofollow = any_subject
+    lists_equal(xattr.listxattr(item, True), [])
+    tuples_equal(xattr.get_all(item, True), [])
     with pytest.raises(EnvironmentError):
-        xattr.getxattr(item, USER_ATTR)
+        xattr.getxattr(item, USER_ATTR, True)
 
-def test_no_attributes_deprecated_symlinks(testdir, use_dangling):
-    """test no attributes on symlinks (deprecated functions)"""
-    _, sname = get_symlink(testdir, dangling=use_dangling)
-    lists_equal(xattr.listxattr(sname, True), [])
-    tuples_equal(xattr.get_all(sname, nofollow=True), [])
-    with pytest.raises(EnvironmentError):
-        xattr.getxattr(sname, USER_ATTR, True)
-
-def test_no_attributes(subject):
+def test_no_attributes(any_subject):
     """test no attributes"""
-    item = subject[0]
-    lists_equal(xattr.list(item), [])
-    assert xattr.list(item, namespace=NAMESPACE) == []
-    tuples_equal(xattr.get_all(item), [])
-    assert xattr.get_all(item, namespace=NAMESPACE) == []
-    with pytest.raises(EnvironmentError):
-        xattr.get(item, USER_NN, namespace=NAMESPACE)
-
-def test_no_attributes_symlinks(testdir, use_dangling):
-    """test no attributes on symlinks"""
-    _, sname = get_symlink(testdir, dangling=use_dangling)
-    lists_equal(xattr.list(sname, nofollow=True), [])
-    assert xattr.list(sname, nofollow=True,
+    item, nofollow = any_subject
+    lists_equal(xattr.list(item, nofollow=nofollow), [])
+    assert xattr.list(item, nofollow=nofollow,
                       namespace=NAMESPACE) == []
-    tuples_equal(xattr.get_all(sname, nofollow=True), [])
-    assert xattr.get_all(sname, nofollow=True,
+    tuples_equal(xattr.get_all(item, nofollow=nofollow), [])
+    assert xattr.get_all(item, nofollow=nofollow,
                          namespace=NAMESPACE) == []
     with pytest.raises(EnvironmentError):
-        xattr.get(sname, USER_NN, namespace=NAMESPACE, nofollow=True)
+        xattr.get(item, USER_NN, nofollow=nofollow,
+                  namespace=NAMESPACE)
 
 def test_binary_payload_deprecated(subject):
     """test binary values (deprecated functions)"""
