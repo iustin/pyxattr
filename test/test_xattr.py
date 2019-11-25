@@ -100,27 +100,48 @@ def get_valid_symlink(path):
 def get_dangling_symlink(path):
     return get_symlink(path, dangling=True)[1]
 
+def as_bytes(call):
+    def f(path):
+        return call(path).encode()
+    return f
+
 # Note: user attributes are only allowed on files and directories, so
 # we have to skip the symlinks here. See xattr(7).
 ITEMS_P = [
     (get_file_name, False),
+    (as_bytes(get_file_name), False),
     (get_file_fd, False),
     (get_file_object, False),
     (get_dir, False),
+    (as_bytes(get_dir), False),
     (get_valid_symlink, False),
+    (as_bytes(get_valid_symlink), False),
 ]
 
 ITEMS_D = [
     "file name",
+    "file name (bytes)",
     "file FD",
     "file object",
     "directory",
+    "directory (bytes)",
     "file via symlink",
+    "file via symlink (bytes)",
 ]
 
-ALL_ITEMS_P = ITEMS_P + [ (get_valid_symlink, True),
-                          (get_dangling_symlink, True)]
-ALL_ITEMS_D = ITEMS_D + ["valid symlink", "dangling symlink"]
+ALL_ITEMS_P = ITEMS_P + [
+    (get_valid_symlink, True),
+    (as_bytes(get_valid_symlink), True),
+    (get_dangling_symlink, True),
+    (as_bytes(get_dangling_symlink), True),
+]
+
+ALL_ITEMS_D = ITEMS_D + [
+    "valid symlink",
+    "valid symlink (bytes)",
+    "dangling symlink",
+    "dangling symlink (bytes)"
+]
 
 @pytest.fixture(params=ITEMS_P, ids=ITEMS_D)
 def subject(testdir, request):
