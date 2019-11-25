@@ -47,13 +47,15 @@ test:
 	  for flavour in "" "-dbg"; do \
 	    if type python$$ver$$flavour >/dev/null; then \
 	      echo Testing with python$$ver$$flavour; \
-	      python$$ver$$flavour ./setup.py test -q; \
+	      python$$ver$$flavour setup.py build_ext -i; \
+	      python$$ver$$flavour -m pytest test; \
 	    fi; \
 	  done; \
 	done;
-	@if type pypy >/dev/null; then \
-	  echo Testing with pypy; \
-	  pypy ./setup.py test -q; \
+	@if type pypy3 >/dev/null; then \
+	  echo Testing with pypy3; \
+	  pypy3 setup.py build_ext -i; \
+	  pypy3 -m pytest test; \
 	fi
 
 benchmark: $(MODNAME)

@@ -1,5 +1,8 @@
 language: python
 
+# enable caching of installed packages.
+cache: pip
+
 # let's test as many versions as we can!
 python:
     - "3.4"
@@ -19,13 +22,17 @@ matrix:
       python:
 
 # install coverage helper:
-install: gem install coveralls-lcov
+install:
+  - gem install coveralls-lcov
+  - pip install pytest
 
 # the test command:
 script:
-  - python ./setup.py test
+  - python ./setup.py build_ext -i
+  - python -m pytest test
   - make clean
-  - CFLAGS="-coverage" python ./setup.py test
+  - CFLAGS="-coverage" python ./setup.py build_ext -i
+  - python -m pytest test
 
 # install lcov, platform-specific but clean:
 addons:
