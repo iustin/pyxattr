@@ -80,7 +80,7 @@ benchmark: $(MODNAME)
 coverage:
 	$(MAKE) clean
 	$(MAKE) test CFLAGS="-coverage"
-	lcov --capture --directory . --output-file coverage.info
+	lcov --capture --directory . --no-external --output-file coverage.info
 	genhtml coverage.info --output-directory out
 
 clean:
