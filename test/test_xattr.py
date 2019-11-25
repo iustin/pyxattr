@@ -187,8 +187,7 @@ def test_file_mixed_access(testdir):
         assert xattr.get_all(fname, namespace=NAMESPACE) == \
             [(USER_NN, USER_VAL)]
 
-def test_ListSetGet(subject, use_ns):
-    """check list, set, get operations against an item"""
+def test_replace_on_missing(subject, use_ns):
     item = subject[0]
     lists_equal(xattr.list(item), [])
     with pytest.raises(EnvironmentError):
@@ -197,6 +196,10 @@ def test_ListSetGet(subject, use_ns):
                       namespace=NAMESPACE)
         else:
             xattr.set(item, USER_ATTR, USER_VAL, flags=XATTR_REPLACE)
+
+def test_create_on_existing(subject, use_ns):
+    item = subject[0]
+    lists_equal(xattr.list(item), [])
     if use_ns:
         xattr.set(item, USER_NN, USER_VAL,
                   namespace=NAMESPACE)
@@ -208,6 +211,24 @@ def test_ListSetGet(subject, use_ns):
                       flags=XATTR_CREATE, namespace=NAMESPACE)
         else:
             xattr.set(item, USER_ATTR, USER_VAL, flags=XATTR_CREATE)
+
+def test_remove_on_missing(subject, use_ns):
+    item = subject[0]
+    lists_equal(xattr.list(item), [])
+    with pytest.raises(EnvironmentError):
+        if use_ns:
+            xattr.remove(item, USER_NN, namespace=NAMESPACE)
+        else:
+            xattr.remove(item, USER_ATTR)
+
+def test_set_get_remove(subject, use_ns):
+    item = subject[0]
+    lists_equal(xattr.list(item), [])
+    if use_ns:
+        xattr.set(item, USER_NN, USER_VAL,
+                  namespace=NAMESPACE)
+    else:
+        xattr.set(item, USER_ATTR, USER_VAL)
     if use_ns:
         assert xattr.list(item, namespace=NAMESPACE) == [USER_NN]
     else:
@@ -230,12 +251,6 @@ def test_ListSetGet(subject, use_ns):
         xattr.remove(item, USER_ATTR)
     lists_equal(xattr.list(item), [])
     tuples_equal(xattr.get_all(item), [])
-    with pytest.raises(EnvironmentError):
-        if use_ns:
-            xattr.remove(item, USER_NN, namespace=NAMESPACE)
-        else:
-            xattr.remove(item, USER_ATTR)
-
 
 def test_replace_on_missing_deprecated(subject):
     item = subject[0]
