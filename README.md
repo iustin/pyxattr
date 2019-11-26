@@ -5,7 +5,7 @@ to the extended attributes for filesystem objects available in some
 operating systems.
 
 [![Travis](https://img.shields.io/travis/iustin/pyxattr)](https://travis-ci.org/iustin/pyxattr)
-[![Coveralls github](https://img.shields.io/coveralls/github/iustin/pyxattr)](https://coveralls.io/github/iustin/pyxattr)
+[![Codecov](https://img.shields.io/codecov/c/github/iustin/pyxattr)](https://codecov.io/gh/iustin/pyxattr)
 [![Read the Docs](https://img.shields.io/readthedocs/pyxattr)](http://pyxattr.readthedocs.io/en/latest/?badge=latest)
 [![GitHub issues](https://img.shields.io/github/issues/iustin/pyxattr)](https://github.com/iustin/pyxattr/issues)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/iustin/pyxattr)
