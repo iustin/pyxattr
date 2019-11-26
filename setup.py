@@ -36,4 +36,18 @@ setup(name = "pyxattr",
       test_suite = "test",
       platforms = ["Linux"],
       python_requires = ">=3.4",
+      project_urls={
+        "Bug Tracker": "https://github.com/iustin/bakonf/issues",
+      },
+      classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Topic :: System :: Filesystems",
+      ]
       )
