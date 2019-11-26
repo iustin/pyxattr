@@ -1,6 +1,14 @@
 News
 ====
 
+Version 0.7.2
+-------------
+
+*unreleased*
+
+* Expand testing by adding better mixed-access checks (e.g. set via symlink
+  and read on file) and by not leaking resources during tests.
+
 Version 0.7.1
 -------------
 
