@@ -30,10 +30,10 @@ install:
 # the test command:
 script:
   - python ./setup.py build_ext -i
-  - python -m pytest test
+  - python -m pytest tests
   - make clean
   - CFLAGS="-coverage" python ./setup.py build_ext -i
-  - python -m pytest test
+  - python -m pytest tests
 
 # install lcov, platform-specific but clean:
 addons:
