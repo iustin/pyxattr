@@ -10,7 +10,7 @@ except ImportError:
 long_desc = """This is a C extension module for Python which
 implements extended attributes manipulation. It is a wrapper on top
 of the attr C library - see attr(5)."""
-version = "0.6.1"
+version = "0.7.0"
 author = "Iustin Pop"
 author_email = "iustin@k1024.org"
 libraries = []
