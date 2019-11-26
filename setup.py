@@ -37,7 +37,7 @@ setup(name = "pyxattr",
       platforms = ["Linux"],
       python_requires = ">=3.4",
       project_urls={
-        "Bug Tracker": "https://github.com/iustin/bakonf/issues",
+        "Bug Tracker": "https://github.com/iustin/pyxattr/issues",
       },
       classifiers = [
         "Development Status :: 5 - Production/Stable",
