@@ -48,6 +48,7 @@ setup(name = "pyxattr",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
+        "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: System :: Filesystems",
       ]
       )
