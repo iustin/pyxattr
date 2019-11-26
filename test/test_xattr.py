@@ -386,9 +386,21 @@ def test_symlinks_user_fail(testdir, use_dangling):
     with pytest.raises(IOError):
         xattr.setxattr(sname, USER_ATTR, USER_VAL, XATTR_CREATE, True)
 
-def test_none_namespace(subject):
+@pytest.mark.parametrize(
+    "call, args", [(xattr.get, [USER_ATTR]),
+                   (xattr.list, []),
+                   (xattr.remove, [USER_ATTR]),
+                   (xattr.get, [USER_ATTR]),
+                   (xattr.set, [USER_ATTR, USER_VAL])])
+def test_none_namespace(testdir, call, args):
+    # Don't want to use subject, since that would prevent xfail test
+    # on path objects (due to hiding the exception here).
+    f = get_file_name(testdir)
     with pytest.raises(TypeError):
-        xattr.get(subject[0], USER_ATTR, namespace=None)
+        call(f, *args, namespace=None)
+    fd = get_file_fd(testdir)
+    with pytest.raises(TypeError):
+        call(fd, *args, namespace=None)
 
 @pytest.mark.parametrize(
     "call",
