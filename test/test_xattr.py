@@ -6,6 +6,8 @@ import tempfile
 import os
 import errno
 import pytest
+import pathlib
+import platform
 
 import xattr
 from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
@@ -105,28 +107,47 @@ def as_bytes(call):
         return call(path).encode()
     return f
 
+def as_fspath(call):
+    def f(path):
+        return pathlib.PurePath(call(path))
+    return f
+
+NOT_BEFORE_36 = pytest.mark.xfail(condition="sys.version_info < (3,6)",
+                                  strict=True)
+NOT_PYPY = pytest.mark.xfail(condition="platform.python_implementation() == 'PyPy'",
+                                  strict=False)
+
 # Note: user attributes are only allowed on files and directories, so
 # we have to skip the symlinks here. See xattr(7).
 ITEMS_P = [
     (get_file_name, False),
     (as_bytes(get_file_name), False),
+    pytest.param((as_fspath(get_file_name), False),
+                 marks=[NOT_BEFORE_36, NOT_PYPY]),
     (get_file_fd, False),
     (get_file_object, False),
     (get_dir, False),
     (as_bytes(get_dir), False),
+    pytest.param((as_fspath(get_dir), False),
+                 marks=[NOT_BEFORE_36, NOT_PYPY]),
     (get_valid_symlink, False),
     (as_bytes(get_valid_symlink), False),
+    pytest.param((as_fspath(get_valid_symlink), False),
+                 marks=[NOT_BEFORE_36, NOT_PYPY]),
 ]
 
 ITEMS_D = [
     "file name",
     "file name (bytes)",
+    "file name (path)",
     "file FD",
     "file object",
     "directory",
     "directory (bytes)",
+    "directory (path)",
     "file via symlink",
     "file via symlink (bytes)",
+    "file via symlink (path)",
 ]
 
 ALL_ITEMS_P = ITEMS_P + [

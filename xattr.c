@@ -29,9 +29,9 @@
 #include <stdio.h>
 
 #define ITEM_DOC \
-    ":param item: a string representing a file-name, or a file-like\n" \
-    "    object, or a file descriptor; this represents the file on \n" \
-    "    which to act\n"
+    ":param item: a string representing a file-name, a file-like\n" \
+    "    object, a file descriptor, or (in Python 3.6+) a path-like\n" \
+    "    object; this represents the file on which to act\n"
 
 #define NOFOLLOW_DOC \
     ":param nofollow: if true and if\n" \
@@ -130,29 +130,28 @@ static int merge_ns(const char *ns, const char *name,
 static int convert_obj(PyObject *myobj, target_t *tgt, int nofollow) {
     int fd;
     tgt->tmp = NULL;
-    if(PyBytes_Check(myobj)) {
-        tgt->type = nofollow ? T_LINK : T_PATH;
-        tgt->name = PyBytes_AS_STRING(myobj);
-    } else if(PyUnicode_Check(myobj)) {
-        tgt->type = nofollow ? T_LINK : T_PATH;
-        tgt->tmp = \
-            PyUnicode_AsEncodedString(myobj,
-                                      Py_FileSystemDefaultEncoding,
-                                      "surrogateescape"
-                                      );
-        if(tgt->tmp == NULL)
-            return -1;
-        tgt->name = PyBytes_AS_STRING(tgt->tmp);
-    } else if((fd = PyObject_AsFileDescriptor(myobj)) != -1) {
+    if((fd = PyObject_AsFileDescriptor(myobj)) != -1) {
         tgt->type = T_FD;
         tgt->fd = fd;
+        return 0;
+    }
+    // PyObject_AsFileDescriptor sets an error when failing, so clear
+    // it such that further code works; some method lookups fail if an
+    // error already occured when called, which breaks at least
+    // PyOS_FSPath (called by FSConverter).
+    PyErr_Clear();
+
+    if(PyUnicode_FSConverter(myobj, &(tgt->tmp))) {
+        tgt->type = nofollow ? T_LINK : T_PATH;
+        tgt->name = PyBytes_AS_STRING(tgt->tmp);
+        return 0;
     } else {
-        PyErr_SetString(PyExc_TypeError, "argument must be string or int");
+        // Don't set our own exception type, since we'd ignore the
+        // FSConverter-generated one.
         tgt->type = T_PATH;
         tgt->name = NULL;
         return -1;
     }
-    return 0;
 }
 
 /* Combine a namespace string and an attribute name into a

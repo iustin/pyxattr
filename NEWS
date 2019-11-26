@@ -9,6 +9,15 @@ Version 0.7.0
 Major change: drop compatibility with Python 2, which allows significant
 code cleanups.
 
+Other changes:
+
+* Switch internal implementation of argument parsing to a built-in one
+  (`PyUnicode_FSConverter`), which brings automatic support for
+  path-like objects in Python 3.6+, and also a more uniform handling of
+  Unicode path arguments with respect to other Python code.
+* Switch test library to pytest; not that a reasonable recent version is
+  needed.
+
 Version 0.6.1
 -------------
 
