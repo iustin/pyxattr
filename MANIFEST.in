@@ -6,6 +6,6 @@ include doc/conf.py
 include doc/index.rst
 include doc/module.rst
 include setup.cfg
-include test/test_xattr.py
-include test/__init__.py
+include tests/test_xattr.py
+include tests/__init__.py
 include xattr.c

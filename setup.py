@@ -33,7 +33,6 @@ setup(name = "pyxattr",
                                define_macros=macros,
                                extra_compile_args=["-Wall", "-Werror", "-Wsign-compare"],
                                )],
-      test_suite = "test",
       platforms = ["Linux"],
       python_requires = ">=3.4",
       project_urls={

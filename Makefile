@@ -48,19 +48,19 @@ test:
 	    if type python$$ver$$flavour >/dev/null; then \
 	      echo Testing with python$$ver$$flavour; \
 	      python$$ver$$flavour setup.py build_ext -i; \
-	      python$$ver$$flavour -m pytest test; \
+	      python$$ver$$flavour -m pytest tests; \
 	    fi; \
 	  done; \
 	done;
 	@if type pypy3 >/dev/null; then \
 	  echo Testing with pypy3; \
 	  pypy3 setup.py build_ext -i; \
-	  pypy3 -m pytest test; \
+	  pypy3 -m pytest tests; \
 	fi
 
 fast-test:
 	python3 setup.py build_ext -i
-	python3 -m pytest test -v
+	python3 -m pytest tests -v
 
 benchmark: $(MODNAME)
 	@set -e; \
