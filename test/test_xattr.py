@@ -113,6 +113,18 @@ def get_valid_symlink(path):
 def get_dangling_symlink(path):
     yield get_symlink(path, dangling=True)[1]
 
+@contextlib.contextmanager
+def get_file_and_symlink(path):
+    yield get_symlink(path, dangling=False)
+
+@contextlib.contextmanager
+def get_file_and_fobject(path):
+    fh, fname = get_file(path)
+    with os.fdopen(fh) as fo:
+        yield fname, fo
+
+# Wrappers that build upon existing values
+
 def as_wrapper(call, fn, closer=None):
     @contextlib.contextmanager
     def f(path):
@@ -218,36 +230,39 @@ def test_large_value(subject):
     xattr.set(item, USER_ATTR, LARGE_VAL)
     assert xattr.get(item, USER_ATTR, nofollow=nofollow) == LARGE_VAL
 
-
-def test_file_mixed_access_deprecated(testdir):
-    """test mixed access to file (deprecated functions)"""
-    fh, fname = get_file(testdir)
-    with os.fdopen(fh) as fo:
-        lists_equal(xattr.listxattr(fname), [])
-        xattr.setxattr(fname, USER_ATTR, USER_VAL)
-        lists_equal(xattr.listxattr(fh), [USER_ATTR])
-        assert xattr.getxattr(fo, USER_ATTR) == USER_VAL
-        tuples_equal(xattr.get_all(fo), [(USER_ATTR, USER_VAL)])
-        tuples_equal(xattr.get_all(fname),
-                     [(USER_ATTR, USER_VAL)])
-
-def test_file_mixed_access(testdir):
+@pytest.mark.parametrize(
+    "gen", [ get_file_and_symlink, get_file_and_fobject ])
+def test_mixed_access(testdir, gen):
     """test mixed access to file"""
-    fh, fname = get_file(testdir)
-    with os.fdopen(fh) as fo:
-        lists_equal(xattr.list(fname), [])
-        xattr.set(fname, USER_ATTR, USER_VAL)
-        lists_equal(xattr.list(fh), [USER_ATTR])
-        assert xattr.list(fh, namespace=NAMESPACE) == [USER_NN]
-        assert xattr.get(fo, USER_ATTR) == USER_VAL
-        assert xattr.get(fo, USER_NN, namespace=NAMESPACE) == USER_VAL
-        tuples_equal(xattr.get_all(fo),
-                     [(USER_ATTR, USER_VAL)])
-        assert xattr.get_all(fo, namespace=NAMESPACE) == \
-            [(USER_NN, USER_VAL)]
-        tuples_equal(xattr.get_all(fname), [(USER_ATTR, USER_VAL)])
-        assert xattr.get_all(fname, namespace=NAMESPACE) == \
-            [(USER_NN, USER_VAL)]
+    with gen(testdir) as (a, b):
+        # Check empty
+        lists_equal(xattr.list(a), [])
+        lists_equal(xattr.listxattr(b), [])
+
+        # Check value
+        xattr.set(a, USER_ATTR, USER_VAL)
+        for i in [a, b]:
+            # Deprecated functions
+            lists_equal(xattr.listxattr(i), [USER_ATTR])
+            assert xattr.getxattr(i, USER_ATTR) == USER_VAL
+            tuples_equal(xattr.get_all(i), [(USER_ATTR, USER_VAL)])
+            # Current functions
+            lists_equal(xattr.list(i), [USER_ATTR])
+            assert xattr.list(i, namespace=NAMESPACE) == [USER_NN]
+            assert xattr.get(i, USER_ATTR) == USER_VAL
+            assert xattr.get(i, USER_NN, namespace=NAMESPACE) == USER_VAL
+            tuples_equal(xattr.get_all(i),
+                         [(USER_ATTR, USER_VAL)])
+            assert xattr.get_all(i, namespace=NAMESPACE) == \
+                [(USER_NN, USER_VAL)]
+
+        # Overwrite
+        xattr.set(b, USER_ATTR, LARGE_VAL, flags=xattr.XATTR_REPLACE)
+        assert xattr.get(a, USER_ATTR) == LARGE_VAL
+        assert xattr.getxattr(a, USER_ATTR) == LARGE_VAL
+        xattr.removexattr(b, USER_ATTR)
+        assert xattr.get_all(a, namespace=NAMESPACE) == []
+        assert xattr.get_all(b, namespace=NAMESPACE) == []
 
 def test_replace_on_missing(subject, use_ns):
     item = subject[0]
