@@ -9,6 +9,7 @@ import pytest
 import pathlib
 import platform
 import io
+import contextlib
 
 import xattr
 from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
@@ -72,20 +73,27 @@ def get_file(path):
     fh, fname = tempfile.mkstemp(".test", "xattr-", path)
     return fh, fname
 
+@contextlib.contextmanager
 def get_file_name(path):
     fh, fname = get_file(path)
     os.close(fh)
-    return fname
+    yield fname
 
+@contextlib.contextmanager
 def get_file_fd(path):
-    return get_file(path)[0]
+    fd = get_file(path)[0]
+    yield fd
+    os.close(fd)
 
+@contextlib.contextmanager
 def get_file_object(path):
     fd = get_file(path)[0]
-    return os.fdopen(fd)
+    with os.fdopen(fd) as f:
+        yield f
 
+@contextlib.contextmanager
 def get_dir(path):
-    return tempfile.mkdtemp(".test", "xattr-", path)
+    yield tempfile.mkdtemp(".test", "xattr-", path)
 
 def get_symlink(path, dangling=True):
     """create a symlink"""
@@ -97,26 +105,34 @@ def get_symlink(path, dangling=True):
     os.symlink(fname, sname)
     return fname, sname
 
+@contextlib.contextmanager
 def get_valid_symlink(path):
-    return get_symlink(path, dangling=False)[1]
+    yield get_symlink(path, dangling=False)[1]
 
+@contextlib.contextmanager
 def get_dangling_symlink(path):
-    return get_symlink(path, dangling=True)[1]
+    yield get_symlink(path, dangling=True)[1]
+
+def as_wrapper(call, fn, closer=None):
+    @contextlib.contextmanager
+    def f(path):
+        with call(path) as r:
+            val = fn(r)
+            yield val
+            if closer is not None:
+                closer(val)
+    return f
 
 def as_bytes(call):
-    def f(path):
-        return call(path).encode()
-    return f
+    return as_wrapper(call, lambda r: r.encode())
 
 def as_fspath(call):
-    def f(path):
-        return pathlib.PurePath(call(path))
-    return f
+    return as_wrapper(call, pathlib.PurePath)
 
 def as_iostream(call):
-    def f(path):
-        return io.open(call(path), "r")
-    return f
+    opener = lambda f: io.open(f, "r")
+    closer = lambda r: r.close()
+    return as_wrapper(call, opener, closer)
 
 NOT_BEFORE_36 = pytest.mark.xfail(condition="sys.version_info < (3,6)",
                                   strict=True)
@@ -174,11 +190,13 @@ ALL_ITEMS_D = ITEMS_D + [
 
 @pytest.fixture(params=ITEMS_P, ids=ITEMS_D)
 def subject(testdir, request):
-    return request.param[0](testdir), request.param[1]
+    with request.param[0](testdir) as value:
+        yield value, request.param[1]
 
 @pytest.fixture(params=ALL_ITEMS_P, ids=ALL_ITEMS_D)
 def any_subject(testdir, request):
-    return request.param[0](testdir), request.param[1]
+    with request.param[0](testdir) as value:
+        yield value, request.param[1]
 
 @pytest.fixture(params=[True, False], ids=["with namespace", "no namespace"])
 def use_ns(request):
