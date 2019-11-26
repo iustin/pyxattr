@@ -1,6 +1,14 @@
 News
 ====
 
+Version 0.7.0
+-------------
+
+*unreleased*
+
+Major change: drop compatibility with Python 2, which allows significant
+code cleanups.
+
 Version 0.6.1
 -------------
 
