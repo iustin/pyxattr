@@ -8,6 +8,7 @@ import errno
 import pytest
 import pathlib
 import platform
+import io
 
 import xattr
 from xattr import NS_USER, XATTR_CREATE, XATTR_REPLACE
@@ -112,6 +113,11 @@ def as_fspath(call):
         return pathlib.PurePath(call(path))
     return f
 
+def as_iostream(call):
+    def f(path):
+        return io.open(call(path), "r")
+    return f
+
 NOT_BEFORE_36 = pytest.mark.xfail(condition="sys.version_info < (3,6)",
                                   strict=True)
 NOT_PYPY = pytest.mark.xfail(condition="platform.python_implementation() == 'PyPy'",
@@ -126,6 +132,7 @@ ITEMS_P = [
                  marks=[NOT_BEFORE_36, NOT_PYPY]),
     (get_file_fd, False),
     (get_file_object, False),
+    (as_iostream(get_file_name), False),
     (get_dir, False),
     (as_bytes(get_dir), False),
     pytest.param((as_fspath(get_dir), False),
@@ -142,6 +149,7 @@ ITEMS_D = [
     "file name (path)",
     "file FD",
     "file object",
+    "file io stream",
     "directory",
     "directory (bytes)",
     "directory (path)",
