@@ -645,7 +645,10 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
           Py_DECREF(mylist);
           goto free_buf_val;
         }
-        PyList_Append(mylist, my_tuple);
+        if(PyList_Append(mylist, my_tuple) < 0) {
+            Py_DECREF(mylist);
+            goto free_buf_val;
+        }
         Py_DECREF(my_tuple);
     }
 
