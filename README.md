@@ -39,7 +39,7 @@ Alternatively, you can install directly from pip:
 
 Or from your distribution, e.g. in Debian:
 
-    $ sudo install python3-pyxattr
+    $ sudo apt install python3-pyxattr
 
 ## Basic example
 
