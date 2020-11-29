@@ -10,6 +10,7 @@ python:
     - "3.6"
     - "3.7"
     - "3.8"
+    - "3.9-dev"
     - "nightly"
 
 # enable OSX support, with only system Python, and newer Python on Linux:
