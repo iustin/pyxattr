@@ -23,7 +23,7 @@ repository is either at <http://git.k1024.org/pyxattr.git> or at
 
 ## Requirements
 
-The current supported Python versions are 3.4+.
+The current supported Python versions are 3.4+ (tested up to 3.9).
 
 The library has been written and tested on Linux, kernel v2.4 or
 later, with XFS and ext2/ext3/ext3 file systems. If any other platform

@@ -4,10 +4,14 @@ News
 Version 0.7.2
 -------------
 
-*unreleased*
+*Sun, 29 Nov 2020*
 
-* Expand testing by adding better mixed-access checks (e.g. set via symlink
-  and read on file) and by not leaking resources during tests.
+Minor release:
+
+* Expand testing by adding better mixed-access checks (e.g. set via
+  symlink and read on file) and by not leaking resources during tests.
+* Enable testing with Python 3.9 and confirm compatibility with it.
+* Fix documentation building with Sphinx 3.0+.
 
 Version 0.7.1
 -------------
