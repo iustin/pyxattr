@@ -90,12 +90,6 @@ pygments_style = 'sphinx'
 
 keep_warnings = True
 
-# Note: this is still needed in Sphinx 1.8 with recommonmark 0.4.0
-# (https://github.com/readthedocs/recommonmark/issues/119):
-source_parsers = {
-   '.md': 'recommonmark.parser.CommonMarkParser',
-}
-
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
