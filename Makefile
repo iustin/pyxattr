@@ -25,12 +25,6 @@ $(DOCHTML)/index.html: $(MODNAME) $(RSTFILES)
 
 doc: $(DOCHTML)/index.html
 
-doc/readme.md: README.md
-	ln -s ../README.md doc/readme.md
-
-doc/news.rst: NEWS
-	ln -s ../NEWS doc/news.rst
-
 dist:
 	fakeroot $(PYTHON) ./setup.py sdist
 
@@ -89,7 +83,6 @@ coverage:
 
 clean:
 	rm -rf $(DOCHTML) $(DOCTREES)
-	rm -f doc/readme.md doc/news.rst
 	rm -f $(MODNAME)
 	rm -f *.so
 	rm -rf build
