@@ -1,0 +1,51 @@
+on: [push]
+name: Continuous Integration
+jobs:
+  build:
+    name: Build and test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9']
+        include:
+          - os: ubuntu-18.04
+            python-version: '3.4'
+            installTyping: ${{ true }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          # This path is specific to Ubuntu
+          path: ~/.cache/pip
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: v1-pip-${{ runner.os }}-${{ matrix.python-version }}
+          restore-keys: |
+            v1-pip-${{ runner.os }}
+            v1-pip-
+
+      - name: Install dependencies
+        run: |
+          gem install --user-install coveralls-lcov
+          pip install pytest
+          pip install codecov
+
+      - name: Install typing for old Python
+        run: pip install typing
+        if: matrix.installTyping
+
+      - name: Build the code
+        run: python ./setup.py build_ext -i
+
+      - name: Run tests
+        run: python -m pytest tests
