@@ -36,7 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          gem install --user-install coveralls-lcov
           pip install pytest
           pip install codecov
 
@@ -44,8 +43,41 @@ jobs:
         run: pip install typing
         if: matrix.installTyping
 
+      - name: Install lcov
+        run: sudo apt install -yy lcov
+
       - name: Build the code
         run: python ./setup.py build_ext -i
 
       - name: Run tests
         run: python -m pytest tests
+
+      - name: Cleanup
+        run: make clean
+
+      - name: Re-build with coverage info
+        run: CFLAGS="-coverage" python ./setup.py build_ext -i
+
+      - name: Test with coverage
+        run: python -m pytest tests
+
+      - name: Convert data with lcov
+        run: lcov --capture --no-external --directory . --output-file coverage.info
+
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
+          flag-name: run-${{ matrix.os }}-${{ matrix.python-version }}
+          parallel: true
+          path-to-lcov: coverage.info
+
+  finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.github_token }}
+        parallel-finished: true
