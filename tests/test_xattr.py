@@ -151,6 +151,10 @@ NOT_BEFORE_36 = pytest.mark.xfail(condition="sys.version_info < (3,6)",
 NOT_PYPY = pytest.mark.xfail(condition="platform.python_implementation() == 'PyPy'",
                                   strict=False)
 
+NOT_MACOSX = pytest.mark.xfail(condition="sys.platform.startswith('darwin')",
+                               reason="Test not supported on MacOS",
+                               strict=True)
+
 # Note: user attributes are only allowed on files and directories, so
 # we have to skip the symlinks here. See xattr(7).
 ITEMS_P = [
@@ -438,6 +442,7 @@ def test_binary_payload(subject):
     assert xattr.get_all(item, namespace=NAMESPACE) == [(USER_NN, BINVAL)]
     xattr.remove(item, USER_ATTR)
 
+@NOT_MACOSX
 def test_symlinks_user_fail(testdir, use_dangling):
     _, sname = get_symlink(testdir, dangling=use_dangling)
     with pytest.raises(IOError):
