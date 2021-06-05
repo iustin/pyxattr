@@ -311,13 +311,11 @@ static int _remove_obj(target_t *tgt, const char *name) {
  * - buffer: pointer to either an already allocated memory area (in
  *   which case size contains its current size), or NULL to
  *   allocate. In all cases (success or failure), the caller should
- *   deallocate the buffer, using PyMem_Free(). Note that if size is
- *   zero but buffer already points to allocate memory, it will be
- *   ignored/leaked.
+ *   deallocate the buffer, using PyMem_Free().
  * - size: either size of current buffer (if non-NULL), or size for
- *   initial allocation (if non-zero), or a zero value which means
- *   auto-allocate buffer with automatically queried size. Value will
- *   be updated upon return with the current buffer size.
+ *   initial allocation; zero means use a hardcoded initial buffer
+ *   size (ESTIMATE_ATTR_SIZE). The value will be updated upon return
+ *   with the current buffer size.
  * - io_errno: if non-NULL, the actual errno will be recorded here; if
  *   zero, the call was successful and the output/size/nval are valid.
  *
@@ -354,18 +352,9 @@ static ssize_t _generic_get(buf_getter getter, target_t *tgt,
   }
 
   /* Initialize the buffer, if needed. */
-  if (*size == 0 || *buffer == NULL) {
-    if (*size == 0) {
-      ssize_t nalloc;
-      if ((nalloc = getter(tgt, name, NULL, 0)) == -1) {
-        EXIT_IOERROR();
-      }
-      if (nalloc == 0) {
-        /* Empty, so no need to retrieve it. */
-        return 0;
-      }
-      *size = nalloc;
-    }
+  if (*buffer == NULL) {
+    if (*size == 0)
+      *size = ESTIMATE_ATTR_SIZE;
     if((*buffer = PyMem_Malloc(*size)) == NULL) {
       PyErr_NoMemory();
       return -1;
@@ -443,7 +432,7 @@ pygetxattr(PyObject *self, PyObject *args)
     char *attrname = NULL;
     char *buf = NULL;
     ssize_t nret;
-    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    size_t nalloc = 0;
     PyObject *res;
 
     /* Parse the arguments */
@@ -507,7 +496,7 @@ xattr_get(PyObject *self, PyObject *args, PyObject *keywds)
     char *buf = NULL;
     const char *ns = NULL;
     ssize_t nret;
-    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    size_t nalloc = 0;
     PyObject *res = NULL;
     static char *kwlist[] = {"item", "name", "nofollow", "namespace", NULL};
 
@@ -591,7 +580,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
     const char *ns = NULL;
     char *buf_list = NULL, *buf_val = NULL;
     const char *s;
-    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    size_t nalloc = 0;
     ssize_t nlist, nval;
     PyObject *mylist;
     target_t tgt;
@@ -621,7 +610,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
       goto free_buf_list;
     }
 
-    nalloc = ESTIMATE_ATTR_SIZE;
+    nalloc = 0;
     /* Create and insert the attributes as strings in the list */
     for(s = buf_list; s - buf_list < nlist; s += strlen(s) + 1) {
         PyObject *my_tuple;
@@ -970,7 +959,7 @@ pylistxattr(PyObject *self, PyObject *args)
     char *buf = NULL;
     int nofollow = 0;
     ssize_t nret;
-    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    size_t nalloc = 0;
     PyObject *myarg;
     PyObject *mylist;
     Py_ssize_t nattrs;
@@ -1053,7 +1042,7 @@ xattr_list(PyObject *self, PyObject *args, PyObject *keywds)
     char *buf = NULL;
     int nofollow = 0;
     ssize_t nret;
-    size_t nalloc = ESTIMATE_ATTR_SIZE;
+    size_t nalloc = 0;
     PyObject *myarg;
     PyObject *res;
     const char *ns = NULL;
