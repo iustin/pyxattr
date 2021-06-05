@@ -1,5 +1,5 @@
 on: [push]
-name: Continuous Integration
+name: CI
 jobs:
   build:
     name: Build and test
