@@ -636,7 +636,7 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
         }
         int lappend_ret = PyList_Append(mylist, my_tuple);
         Py_DECREF(my_tuple);
-        if(lappend_ret) < 0) {
+        if(lappend_ret < 0) {
             Py_DECREF(mylist);
             goto free_buf_val;
         }
