@@ -20,21 +20,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-22.04, macos-12]
         python-version:
-          - '3.5'
-          - '3.6'
           - '3.7'
           - '3.8'
           - '3.9'
-          - '3.10-dev'
-          - 'pypy-3.6'
+          - '3.10'
           - 'pypy-3.7'
-        include:
-          - os: ubuntu-18.04
-            python-version: '3.4'
-            installTyping: ${{ true }}
-      fail-fast: true
+          - 'pypy-3.8'
+          - 'pypy-3.9'
+      fail-fast: false
 
     steps:
       - name: Checkout
