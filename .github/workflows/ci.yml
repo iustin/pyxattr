@@ -8,6 +8,8 @@ on:
   pull_request:
     branches:
       - master
+  # Allow manual triggering
+  workflow_dispatch:
   # Weekly run to account for
   # changed dependencies.
   schedule:
