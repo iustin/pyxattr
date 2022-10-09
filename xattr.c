@@ -634,11 +634,12 @@ get_all(PyObject *self, PyObject *args, PyObject *keywds)
           Py_DECREF(mylist);
           goto free_buf_val;
         }
-        if(PyList_Append(mylist, my_tuple) < 0) {
+        int lappend_ret = PyList_Append(mylist, my_tuple);
+        Py_DECREF(my_tuple);
+        if(lappend_ret < 0) {
             Py_DECREF(mylist);
             goto free_buf_val;
         }
-        Py_DECREF(my_tuple);
     }
 
     /* Successful exit */
