@@ -1206,6 +1206,10 @@ PyInit_xattr(void)
         goto err_out;
     if((ns_user = PyBytes_FromString("user")) == NULL)
         goto err_out;
+
+    /* Add the new objects to the module */
+    /* TODO: after switching to min 3.10, use the *Ref version, and simplify
+     the error handling. */
     if(PyModule_AddObject(m, "NS_SECURITY", ns_security) < 0)
         goto err_out;
     ns_security = NULL;
@@ -1226,5 +1230,6 @@ PyInit_xattr(void)
     Py_XDECREF(ns_trusted);
     Py_XDECREF(ns_system);
     Py_XDECREF(ns_security);
+    Py_DECREF(m);
     INITERROR;
 }
