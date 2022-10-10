@@ -23,23 +23,24 @@ repository is either at <http://git.k1024.org/pyxattr.git> or at
 
 ## Requirements
 
-The current supported Python versions are 3.4+ (tested up to 3.9).
+The current supported Python versions are 3.7+ (tested up to 3.10), or
+PyPy versions 3.7+ (tested up to 3.9). The code should currently be
+compatible down to Python 3.4, but such versions are no longer tested.
 
 The library has been written and tested on Linux, kernel v2.4 or
-later, with XFS and ext2/ext3/ext3 file systems. If any other platform
-implements the same behaviour, pyxattr could be used.
+later, with XFS and ext2/ext3/ext4 file systems, and MacOS recent
+versions. If any other platform implements the same behaviour,
+pyxattr could be used.
 
-You need to have the setuptools tool installed in order to build and
-install the module, and for building the documentation you need to
-have Sphinx installed.
+To build the module from source, you will need both a Python development environment/libraries and the C compiler, plus the setuptools tool installed, and for building the documentation you need to have Sphinx installed. The exact list of dependencies depends on the operating system/distribution, but should be something along the lines of `python3-devel` (RedHat), `python3-all-dev` (Debian), etc.
 
-Alternatively, you can install directly from pip:
+Alternatively, you can install directly from pip after installing the above depedencies (C compiler, Python development libraries):
 
-    $ pip install pyxattr
+    pip install pyxattr
 
-Or from your distribution, e.g. in Debian:
+Or you can install already compiled versions from your distribution, e.g. in Debian:
 
-    $ sudo apt install python3-pyxattr
+    sudo apt install python3-pyxattr
 
 ## Basic example
 
