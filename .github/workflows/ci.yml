@@ -57,6 +57,7 @@ jobs:
         run: |
           pip install pytest
           pip install codecov
+          pip install sphinx
 
       - name: Install typing for old Python
         run: pip install typing
@@ -94,3 +95,6 @@ jobs:
         with:
           name: code-coverage-${{ matrix.os }}-${{ matrix.python-version }}
           path: codecov-report.txt
+
+      - name: Build documentation
+        run: make doc
