@@ -58,6 +58,7 @@ jobs:
           pip install pytest
           pip install codecov
           pip install sphinx
+          pip install recommonmark
 
       - name: Install typing for old Python
         run: pip install typing
