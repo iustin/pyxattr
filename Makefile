@@ -11,7 +11,7 @@ DISTFILE      = $(FULLVER).tar.gz
 
 MODNAME = xattr.so
 RSTFILES = doc/index.rst doc/module.rst doc/news.rst doc/readme.md doc/conf.py
-PYVERS = 3.4 3.5 3.6 3.7 3.8 3.9
+PYVERS = 3.7 3.8 3.9 3.10
 REPS = 5
 
 all: doc test
