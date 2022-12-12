@@ -32,13 +32,20 @@ later, with XFS and ext2/ext3/ext4 file systems, and MacOS recent
 versions. If any other platform implements the same behaviour,
 pyxattr could be used.
 
-To build the module from source, you will need both a Python development environment/libraries and the C compiler, plus the setuptools tool installed, and for building the documentation you need to have Sphinx installed. The exact list of dependencies depends on the operating system/distribution, but should be something along the lines of `python3-devel` (RedHat), `python3-all-dev` (Debian), etc.
+To build the module from source, you will need both a Python
+development environment/libraries and the C compiler, plus the
+setuptools tool installed, and for building the documentation you need
+to have Sphinx installed. The exact list of dependencies depends on
+the operating system/distribution, but should be something along the
+lines of `python3-devel` (RedHat), `python3-all-dev` (Debian), etc.
 
-Alternatively, you can install directly from pip after installing the above depedencies (C compiler, Python development libraries):
+Alternatively, you can install directly from pip after installing the
+above depedencies (C compiler, Python development libraries):
 
     pip install pyxattr
 
-Or you can install already compiled versions from your distribution, e.g. in Debian:
+Or you can install already compiled versions from your distribution,
+e.g. in Debian:
 
     sudo apt install python3-pyxattr
 
