@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import distutils
 import platform
 try:
   from setuptools import setup, Extension
