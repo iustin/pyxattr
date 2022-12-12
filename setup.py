@@ -33,7 +33,7 @@ setup(name = "pyxattr",
                                extra_compile_args=["-Wall", "-Werror", "-Wsign-compare"],
                                )],
       platforms = ["Linux"],
-      python_requires = ">=3.4",
+      python_requires = ">=3.7",
       project_urls={
         "Bug Tracker": "https://github.com/iustin/pyxattr/issues",
       },
