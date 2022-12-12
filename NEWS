@@ -1,6 +1,21 @@
 News
 ====
 
+Version 0.8.0
+-------------
+
+*Mon, 12 Dec 2022*
+
+Minor bugfix release, but due to lack of CI environments supporting old
+Python versions, only Python 3.7+ is supported. Otherwise:
+
+* Snape3058@ found some refcount issues (see issue #35), these have been
+  fixed.
+* Tested and enabled Python 3.10 support, dropped < 3.7.
+* Various improvements to the CI environments.
+* Move fully to `setuptools` (where available), in preparation for 3.12
+  dropping `distutils` support.
+
 Version 0.7.2
 -------------
 

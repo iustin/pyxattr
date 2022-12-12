@@ -5,7 +5,7 @@ DOCDIR        = doc
 DOCHTML       = $(DOCDIR)/html
 DOCTREES      = $(DOCDIR)/doctrees
 ALLSPHINXOPTS = -d $(DOCTREES) $(SPHINXOPTS) $(DOCDIR)
-VERSION       = 0.7.2
+VERSION       = 0.8.0
 FULLVER       = pyxattr-$(VERSION)
 DISTFILE      = $(FULLVER).tar.gz
 
