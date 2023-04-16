@@ -11,3 +11,6 @@ not a guarantee.
 
 Optionally, you can encrypt the email with my GPG key, see for details
 <https://k1024.org/contact/>.
+
+Alternatively, you can use the GitHub "Private vulnerability
+reporting" functionality (but note this is beta).
