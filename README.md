@@ -16,6 +16,7 @@ operating systems.
 ![GitHub Release Date](https://img.shields.io/github/release-date/iustin/pyxattr)
 ![GitHub commits since latest release](https://img.shields.io/github/commits-since/iustin/pyxattr/latest)
 ![GitHub last commit](https://img.shields.io/github/last-commit/iustin/pyxattr)
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7236/badge)](https://bestpractices.coreinfrastructure.org/projects/7236)
 
 Downloads: go to <https://pyxattr.k1024.org/downloads/>. The source
 repository is either at <http://git.k1024.org/pyxattr.git> or at
