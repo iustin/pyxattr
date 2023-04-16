@@ -4,7 +4,7 @@ This is the pyxattr module, a Python extension module which gives access
 to the extended attributes for filesystem objects available in some
 operating systems.
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/iustin/pyxattr/ci.yml?branch=master)](https://github.com/iustin/pyxattr/actions/workflows/ci.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/iustin/pyxattr/ci.yml?branch=master)](https://github.com/iustin/pyxattr/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/iustin/pyxattr)](https://codecov.io/gh/iustin/pyxattr)
 [![Read the Docs](https://img.shields.io/readthedocs/pyxattr)](http://pyxattr.readthedocs.io/en/latest/?badge=latest)
 [![GitHub issues](https://img.shields.io/github/issues/iustin/pyxattr)](https://github.com/iustin/pyxattr/issues)
