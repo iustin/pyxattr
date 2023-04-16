@@ -85,6 +85,7 @@ jobs:
           #fail_ci_if_error: true
           path_to_write_report: ./codecov-report.txt
           #verbose: true
+          gcov: true
 
       - name: Archive code coverage result
         uses: 'actions/upload-artifact@v2'
