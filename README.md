@@ -49,6 +49,10 @@ e.g. in Debian:
 
     sudo apt install python3-pyxattr
 
+## Security
+
+For reporting security vulnerabilities, please see SECURITY.md.
+
 ## Basic example
 
     >>> import xattr
