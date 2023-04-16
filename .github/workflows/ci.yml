@@ -56,7 +56,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install pytest
-          pip install codecov
           pip install sphinx
           pip install recommonmark
 
@@ -76,7 +75,7 @@ jobs:
         run: python -m pytest tests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           #files: ./coverage1.xml,./coverage2.xml
           #directory: ./coverage/reports/
