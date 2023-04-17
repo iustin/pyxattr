@@ -54,7 +54,7 @@ e.g. in Debian:
 
 ## Security
 
-For reporting security vulnerabilities, please see SECURITY.md.
+For reporting security vulnerabilities, please see `SECURITY.md`.
 
 ## Basic example
 
