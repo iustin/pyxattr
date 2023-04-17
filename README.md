@@ -22,6 +22,8 @@ Downloads: go to <https://pyxattr.k1024.org/downloads/>. The source
 repository is either at <https://git.k1024.org/pyxattr.git> or at
 <https://github.com/iustin/pyxattr>.
 
+See the `CONTRIBUTING.md` file for details on how to contribute.
+
 ## Requirements
 
 The current supported Python versions are 3.7+ (tested up to 3.10), or
