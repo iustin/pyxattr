@@ -10,7 +10,7 @@ FULLVER       = pyxattr-$(VERSION)
 DISTFILE      = $(FULLVER).tar.gz
 
 MODNAME = xattr.so
-RSTFILES = doc/index.rst doc/module.rst doc/news.rst doc/readme.md doc/conf.py
+RSTFILES = doc/index.rst doc/module.rst doc/news.md doc/readme.md doc/conf.py
 PYVERS = 3.7 3.8 3.9 3.10 3.11
 REPS = 5
 

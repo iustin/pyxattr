@@ -25,7 +25,7 @@ There are no formal standards, but:
 - New functions should have good docstrings (in the C code).
 - New functions/constants should be listed in the documentation, see
   `doc/module.rst` for how to include them.
-- All non-trivial changes should be listed in `NEWS` for further
+- All non-trivial changes should be listed in `NEWS.md` for further
   inclusion in new releases documentation. Add an "unreleased" section
   (if one doesn't exist yet) to list the changes.
 
@@ -38,8 +38,8 @@ manually (offline, I mean). Basically, once GitHub workflows are fine:
   update as needed.
 - Ensure that `setup.py` has the right Python versions listed (bit me
   more than once).
-- Update the `NEWS` file is up to date (contents), and use the right
-  date.
+- Update the `NEWS.md` file is up to date (contents), and use the
+  right date.
 - Check that the generated documentation (`make doc`) looks right.
 
 Then run these steps:

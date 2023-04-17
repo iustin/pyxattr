@@ -1,8 +1,6 @@
-News
-====
+# News
 
-Version 0.8.1
--------------
+## Version 0.8.1
 
 *Mon, 17 Apr 2023*
 
@@ -13,8 +11,7 @@ Very minor release:
   guide.
 * Restore yet again the CI environment :/
 
-Version 0.8.0
--------------
+## Version 0.8.0
 
 *Mon, 12 Dec 2022*
 
@@ -28,8 +25,7 @@ Python versions, only Python 3.7+ is supported. Otherwise:
 * Move fully to `setuptools` (where available), in preparation for 3.12
   dropping `distutils` support.
 
-Version 0.7.2
--------------
+## Version 0.7.2
 
 *Sun, 29 Nov 2020*
 
@@ -40,15 +36,13 @@ Minor release:
 * Enable testing with Python 3.9 and confirm compatibility with it.
 * Fix documentation building with Sphinx 3.0+.
 
-Version 0.7.1
--------------
+## Version 0.7.1
 
 *released Tue, 26 Nov 2019*
 
 Typo fix release in the bug tracker link :/
 
-Version 0.7.0
--------------
+## Version 0.7.0
 
 *released Tue, 26 Nov 2019*
 
@@ -66,8 +60,7 @@ Other changes:
   needed. Additionally, expand test coverage, although not directly
   visible in actual coverage reports…
 
-Version 0.6.1
--------------
+## Version 0.6.1
 
 *released Tue, 24 Jul 2018*
 
@@ -88,8 +81,7 @@ Minor bugfix, performance and compatibility release.
   appreciated! This also uncovered testing problems related to symlinks,
   which are now fixed (the bug would be caught by the updated tests).
 
-Version 0.6.0
--------------
+## Version 0.6.0
 
 *released Mon, 23 Jan 2017*
 
@@ -109,8 +101,7 @@ As feature release, OSX support was contributed by Adam Knight
 <adam@movq.us>, thanks a lot! I don't have access to OSX so the testing
 for it is done via Travis builds; please report any issues.
 
-Version 0.5.6
--------------
+## Version 0.5.6
 
 *released Sat, 09 Apr 2016*
 
@@ -122,8 +113,7 @@ Small bugfix release:
 
 Tested with Python 2.7.11, Python 3.5.1 and PyPy 5.0.1.
 
-Version 0.5.5
--------------
+## Version 0.5.5
 
 *released Fri, 01 May 2015*
 
@@ -140,16 +130,14 @@ Bugfix release:
   making the code `-Wconversion`-clean (although that warning is not
   enabled by default)
 
-Version 0.5.4
--------------
+## Version 0.5.4
 
 *released Thu, 30 Apr 2015*
 
 Fix memory leaks on some of the error-handling paths of the `get()`
 function.
 
-Version 0.5.3
--------------
+## Version 0.5.3
 
 *released Fri, 23 May 2014*
 
@@ -167,8 +155,7 @@ Small optimisations release:
   (e.g. when using SELinux, or NFSv4); to enable this, define the
   attributes in the TEST_IGNORE_XATTRS environment variable
 
-Version 0.5.2
--------------
+## Version 0.5.2
 
 *released Thu, 03 Jan 2013*
 
@@ -178,8 +165,7 @@ PyArg_ParseTuple use of et# (signed vs. unsigned, and lack of compiler
 warnings). This was fixed, and now the test suite passed with many
 CPython versions and PyPy (version 1.9).
 
-Version 0.5.1
--------------
+## Version 0.5.1
 
 *released Wed, 16 May 2012*
 
@@ -197,21 +183,18 @@ Also, the project home page has changed from SourceForge to GitHub, and
 the documentation has been converted from epydoc-based to sphinx.
 
 
-Version 0.5
------------
+## Version 0.5
 
 *released Sun, 27 Dec 2009*
 
 Implemented support for Python 3. This required a significant change to
 the C module, hence the new version number.
 
-Version 0.4
------------
+## Version 0.4
 
 *released Mon, 30 Jun 2008*
 
-API
-~~~
+### API
 
 The old functions ({get,set,list,remove}xattr) are deprecated and replaced with
 a new API that is namespace-aware and hopefully will allow other OSes (e.g.
@@ -220,25 +203,21 @@ FreeBSD) to be supported more naturally.
 Both the old and the new API are supported in the 0.4 versions, however users
 are encouraged to migrate to the new API.
 
-New features
-~~~~~~~~~~~~
+### New features
 
 A new bulk get function called get_all() has been added that should be somewhat
 faster in case of querying files which have many attributes.
 
-License
-~~~~~~~
+### License
 
 Since LGPLv3 is not compatible with GPLv2 (which unfortunately I didn't realize
 before), the license was changed to LGPLv2.1 or later.
 
-Internals
-~~~~~~~~~
+### Internals
 
 Unittest coverage was improved.
 
-Version 0.3
------------
+## Version 0.3
 
 *released Sun, 09 Mar 2008*
 
@@ -246,15 +225,13 @@ Version 0.3
 * changed listxattr return type from tuple to a list
 * developer-related: added unittests
 
-Version 0.2.2
--------------
+## Version 0.2.2
 
 *released Sun, 01 Jul 2007*
 
 * fixed listing symlink xattrs
 
-Version 0.2.1
--------------
+## Version 0.2.1
 
 *released Sat, 11 Feb 2006*
 
@@ -262,8 +239,3 @@ Version 0.2.1
   do it, actually)
 * fixed a possible memory leak when the actual read of the EA
   failed but the call to get the length of the EA didn't
-
-.. Local Variables:
-.. mode: rst
-.. fill-column: 72
-.. End:
