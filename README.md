@@ -6,7 +6,7 @@ operating systems.
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/iustin/pyxattr/ci.yml?branch=main)](https://github.com/iustin/pyxattr/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/iustin/pyxattr)](https://codecov.io/gh/iustin/pyxattr)
-[![Read the Docs](https://img.shields.io/readthedocs/pyxattr)](http://pyxattr.readthedocs.io/en/latest/?badge=latest)
+[![Read the Docs](https://img.shields.io/readthedocs/pyxattr)](https://pyxattr.readthedocs.io/en/latest/?badge=latest)
 [![GitHub issues](https://img.shields.io/github/issues/iustin/pyxattr)](https://github.com/iustin/pyxattr/issues)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/iustin/pyxattr)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/iustin/pyxattr)](https://github.com/iustin/pyxattr/releases)
@@ -19,7 +19,7 @@ operating systems.
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7236/badge)](https://bestpractices.coreinfrastructure.org/projects/7236)
 
 Downloads: go to <https://pyxattr.k1024.org/downloads/>. The source
-repository is either at <http://git.k1024.org/pyxattr.git> or at
+repository is either at <https://git.k1024.org/pyxattr.git> or at
 <https://github.com/iustin/pyxattr>.
 
 ## Requirements
