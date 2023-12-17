@@ -62,6 +62,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install setuptools
           pip install pytest
           pip install sphinx
           pip install recommonmark
