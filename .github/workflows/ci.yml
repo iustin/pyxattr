@@ -93,7 +93,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           #fail_ci_if_error: true
           #verbose: true
-          gcov: true
 
       - name: Build documentation
         run: make doc
