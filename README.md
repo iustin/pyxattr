@@ -27,8 +27,8 @@ support me on [ko-fi](https://ko-fi.com/iustin).
 
 ## Requirements
 
-The current supported Python versions are 3.7+ (tested up to 3.10), or
-PyPy versions 3.7+ (tested up to 3.9). The code should currently be
+The current supported Python versions are 3.7+ (tested up to 3.12), or
+PyPy versions 3.7+ (tested up to 3.10). The code should currently be
 compatible down to Python 3.4, but such versions are no longer tested.
 
 The library has been written and tested on Linux, kernel v2.4 or
