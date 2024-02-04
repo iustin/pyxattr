@@ -65,7 +65,7 @@ jobs:
           pip install setuptools
           pip install pytest
           pip install sphinx
-          pip install recommonmark
+          pip install myst-parser
 
       - name: Build the code
         run: python ./setup.py build_ext -i
