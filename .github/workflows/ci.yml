@@ -37,7 +37,8 @@ jobs:
           - 'pypy-3.7'
           - 'pypy-3.8'
           - 'pypy-3.9-nightly'
-          - 'pypy-3.10-nightly'
+          # Pypy-3.10 nightly seems to have some issues in bootstrapping
+          # - 'pypy-3.10-nightly'
         include:
             # Python < 3.10 is not available on macOS 14
             - os: macos-14
