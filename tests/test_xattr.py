@@ -148,7 +148,7 @@ def as_iostream(call):
 
 NOT_BEFORE_36 = pytest.mark.xfail(condition="sys.version_info < (3,6)",
                                   strict=True)
-NOT_PYPY = pytest.mark.xfail(condition="platform.python_implementation() == 'PyPy'",
+NOT_OLD_PYPY = pytest.mark.xfail(condition="platform.python_implementation() == 'PyPy' and sys.version_info < (3, 10)",
                                   strict=False)
 
 NOT_MACOSX = pytest.mark.xfail(condition="sys.platform.startswith('darwin')",
@@ -161,18 +161,18 @@ ITEMS_P = [
     (get_file_name, False),
     (as_bytes(get_file_name), False),
     pytest.param((as_fspath(get_file_name), False),
-                 marks=[NOT_BEFORE_36, NOT_PYPY]),
+                 marks=[NOT_BEFORE_36, NOT_OLD_PYPY]),
     (get_file_fd, False),
     (get_file_object, False),
     (as_iostream(get_file_name), False),
     (get_dir, False),
     (as_bytes(get_dir), False),
     pytest.param((as_fspath(get_dir), False),
-                 marks=[NOT_BEFORE_36, NOT_PYPY]),
+                 marks=[NOT_BEFORE_36, NOT_OLD_PYPY]),
     (get_valid_symlink, False),
     (as_bytes(get_valid_symlink), False),
     pytest.param((as_fspath(get_valid_symlink), False),
-                 marks=[NOT_BEFORE_36, NOT_PYPY]),
+                 marks=[NOT_BEFORE_36, NOT_OLD_PYPY]),
 ]
 
 ITEMS_D = [
