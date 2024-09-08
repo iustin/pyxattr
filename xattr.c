@@ -23,7 +23,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__) || defined(__GLIBC__)
 #include <sys/xattr.h>
 #endif
 #include <stdio.h>
@@ -224,7 +224,7 @@ static inline int _fremovexattr(int filedes, const char *name) {
     return fremovexattr(filedes, name, 0);
 }
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__GLIBC__)
 #define _listxattr(path, list, size) listxattr(path, list, size)
 #define _llistxattr(path, list, size) llistxattr(path, list, size)
 #define _flistxattr(fd, list, size) flistxattr(fd, list, size)
