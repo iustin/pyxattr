@@ -34,6 +34,7 @@ jobs:
           - '3.10'
           - '3.11'
           - '3.12'
+          - '3.13'
           - 'pypy-3.7'
           - 'pypy-3.8'
           - 'pypy-3.9'
@@ -46,6 +47,8 @@ jobs:
               python-version: '3.11'
             - os: macos-14
               python-version: '3.12'
+            - os: macos-14
+              python-version: '3.13'
             - os: macos-14
               python-version: 'pypy-3.8'
             - os: macos-14
