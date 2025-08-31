@@ -19,8 +19,7 @@ operating systems.
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7236/badge)](https://bestpractices.coreinfrastructure.org/projects/7236)
 
 Downloads: go to <https://pyxattr.k1024.org/downloads/>. The source
-repository is either at <https://git.k1024.org/pyxattr.git> or at
-<https://github.com/iustin/pyxattr>.
+repository is at <https://github.com/iustin/pyxattr>.
 
 See the `CONTRIBUTING.md` file for details on how to contribute, or
 support me on [ko-fi](https://ko-fi.com/iustin).
