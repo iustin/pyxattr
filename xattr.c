@@ -78,6 +78,7 @@
     "   string (byte string under Python 3)."
 
 #define DOCTEST_SETUP \
+    ".. code-block:: python\n\n" \
     "    >>> import xattr\n" \
     "    >>> import tempfile\n" \
     "    >>> f = tempfile.NamedTemporaryFile()\n"
