@@ -94,6 +94,9 @@ jobs:
       - name: Run tests
         run: python -m pytest tests
 
+      - name: Run doctests
+        run: python -c 'import doctest; import xattr; doctest.testmod(m=xattr)'
+
       - name: Cleanup
         run: make clean
 

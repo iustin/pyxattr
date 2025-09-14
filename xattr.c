@@ -77,6 +77,11 @@
     "   explicitly specify an empty namespace, pass an empty\n" \
     "   string (byte string under Python 3)."
 
+#define DOCTEST_SETUP \
+    "    >>> import xattr\n" \
+    "    >>> import tempfile\n" \
+    "    >>> f = tempfile.NamedTemporaryFile()\n"
+
 
 /* The initial I/O buffer size for list and get operations; if the
  * actual values will be smaller than this, we save a syscall out of
@@ -468,9 +473,9 @@ static char __get_doc__[] =
     "Get the value of a given extended attribute.\n"
     "\n"
     "Example:\n"
-    "    >>> xattr.get('/path/to/file', 'user.comment')\n"
-    "    b'test'\n"
-    "    >>> xattr.get('/path/to/file', 'comment', namespace=xattr.NS_USER)\n"
+    DOCTEST_SETUP
+    "    >>> xattr.set(f.name, 'user.comment', 'test')\n"
+    "    >>> xattr.get(f.name, 'comment', namespace=xattr.NS_USER)\n"
     "    b'test'\n"
     "\n"
     ITEM_DOC
@@ -543,11 +548,13 @@ static char __get_all_doc__[] =
     "and the corresponding value.\n"
     "Example:\n"
     "\n"
-    "    >>> xattr.get_all('/path/to/file')\n"
-    "    [(b'user.mime-type', b'plain/text'), (b'user.comment', b'test'),\n"
-    "     (b'system.posix_acl_access', b'\\x02\\x00...')]\n"
-    "    >>> xattr.get_all('/path/to/file', namespace=xattr.NS_USER)\n"
-    "    [(b'mime-type', b'plain/text'), (b'comment', b'test')]\n"
+    DOCTEST_SETUP
+    "    >>> xattr.set(f.name, 'user.mime-type', 'text/plain')\n"
+    "    >>> xattr.set(f.name, 'user.comment', 'test file')\n"
+    "    >>> xattr.get_all(f.name)\n"
+    "    [(b'user.mime-type', b'text/plain'), (b'user.comment', b'test file')]\n"
+    "    >>> xattr.get_all(f.name, namespace=xattr.NS_USER)\n"
+    "    [(b'mime-type', b'text/plain'), (b'comment', b'test file')]\n"
     "\n"
     ITEM_DOC
     ":keyword namespace: an optional namespace for filtering the\n"
@@ -738,9 +745,9 @@ static char __set_doc__[] =
     "\n"
     "Example:\n"
     "\n"
-    "    >>> xattr.set('/path/to/file', 'user.comment', 'test')\n"
-    "    >>> xattr.set('/path/to/file', 'comment', 'test',"
-    " namespace=xattr.NS_USER)\n"
+    DOCTEST_SETUP
+    "    >>> xattr.set(f.name, 'user.comment', 'test')\n"
+    "    >>> xattr.set(f.name, 'comment', 'test', namespace=xattr.NS_USER)\n"
     "\n"
     ITEM_DOC
     NAME_SET_DOC
@@ -879,7 +886,13 @@ static char __remove_doc__[] =
     "\n"
     "Example:\n"
     "\n"
-    "    >>> xattr.remove('/path/to/file', 'user.comment')\n"
+    DOCTEST_SETUP
+    "    >>> xattr.set(f.name, 'user.comment', 'test')\n"
+    "    >>> xattr.list(f.name)\n"
+    "    [b'user.comment']\n"
+    "    >>> xattr.remove(f.name, 'user.comment')\n"
+    "    >>> xattr.list(f.name)\n"
+    "    []\n"
     "\n"
     ITEM_DOC
     NAME_REMOVE_DOC
@@ -1017,10 +1030,12 @@ static char __list_doc__[] =
     "\n"
     "Example:\n"
     "\n"
-    "    >>> xattr.list('/path/to/file')\n"
-    "    [b'user.test', b'user.comment', b'system.posix_acl_access']\n"
-    "    >>> xattr.list('/path/to/file', namespace=xattr.NS_USER)\n"
-    "    [b'test', b'comment']\n"
+    DOCTEST_SETUP
+    "    >>> xattr.list(f.name, namespace=xattr.NS_USER)\n"
+    "    []\n"
+    "    >>> xattr.set(f.name, 'comment', 'test', namespace=xattr.NS_USER)\n"
+    "    >>> xattr.list(f.name, namespace=xattr.NS_USER)\n"
+    "    [b'comment']\n"
     "\n"
     ITEM_DOC
     NOFOLLOW_DOC
@@ -1136,16 +1151,18 @@ static char __xattr_doc__[] = \
     "    model by using keyword arguments\n"
     "\n"
     "Example: \n\n"
-    "  >>> import xattr\n"
-    "  >>> xattr.listxattr(\"file.txt\")\n"
-    "  [b'user.mime_type']\n"
-    "  >>> xattr.getxattr(\"file.txt\", \"user.mime_type\")\n"
-    "  b'text/plain'\n"
-    "  >>> xattr.setxattr(\"file.txt\", \"user.comment\", "
-    "\"Simple text file\")\n"
-    "  >>> xattr.listxattr(\"file.txt\")\n"
-    "  [b'user.mime_type', b'user.comment']\n"
-    "  >>> xattr.removexattr (\"file.txt\", \"user.comment\")\n"
+    DOCTEST_SETUP
+    "    >>> xattr.set(f.name, 'mime_type', 'text/plain', namespace=xattr.NS_USER)\n"
+    "    >>> xattr.list(f.name, namespace=xattr.NS_USER)\n"
+    "    [b'mime_type']\n"
+    "    >>> xattr.get(f.name, 'user.mime_type')\n"
+    "    b'text/plain'\n"
+    "    >>> xattr.set(f.name, 'user.comment', 'Simple text file')\n"
+    "    >>> xattr.list(f.name, namespace=xattr.NS_USER)\n"
+    "    [b'mime_type', b'comment']\n"
+    "    >>> xattr.remove (f.name, 'user.comment')\n"
+    "    >>> xattr.list(f.name, namespace=xattr.NS_USER)\n"
+    "    [b'mime_type']\n"
     "\n"
     ".. note:: Most or all errors reported by the system while using\n"
     "   the ``xattr`` library will be reported by raising\n"

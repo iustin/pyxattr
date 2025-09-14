@@ -33,7 +33,7 @@ distcheck: dist
 	TDIR=$$(mktemp -d) && \
 	trap "rm -rf $$TDIR" EXIT; \
 	tar xzf dist/$(DISTFILE) -C $$TDIR && \
-	(cd $$TDIR/$(FULLVER) && make doc && make test && make dist) && \
+	(cd $$TDIR/$(FULLVER) && make doc && make module-doctest && make test && make dist) && \
 	echo "All good, you can upload $(DISTFILE)!"
 
 test:
@@ -55,6 +55,9 @@ test:
 fast-test:
 	python3 setup.py build_ext -i
 	python3 -m pytest tests -v
+
+module-doctest: $(MODNAME)
+	python3 -c 'import doctest; import xattr; doctest.testmod(m=xattr)'
 
 benchmark: $(MODNAME)
 	@set -e; \
